@@ -91,12 +91,9 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  width: 30px;
   height: 28px;
   padding: 0;
-  border-color: transparent;
-  background: transparent;
-  color: var(--cgut-text-2);
 }
 
 .icon-button:disabled {
