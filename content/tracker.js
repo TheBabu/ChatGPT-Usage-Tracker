@@ -70,7 +70,7 @@
     mountWarned: { bar: false, sidebar: false },
     mode: null,            // 'work' | 'chat' | null (not known yet) for the current page
     modePath: null,
-    composerBox: null,     // { input, box } cache for findComposerBox
+    composerBox: null,     // { input, box } last found by findComposerBox
     barTarget: null,
   };
 
@@ -407,10 +407,11 @@
   // paints a background with rounded corners. Which element that is differs between the home page
   // and a conversation, so it is found by looking rather than by name. The search stops at the
   // composer's outer element so it can never wander out into the page.
+  //
+  // It is searched for afresh every time rather than remembered: across a Chat/Work switch the
+  // element painting the box changes, and a remembered outer box can stay painted (in the page's
+  // own color) after an inner one takes over, which left the bar stuck underneath the box.
   function findComposerBox(input) {
-    const cached = state.composerBox;
-    if (cached?.input === input && cached.box.isConnected && paintsRoundedBox(cached.box)) return cached.box;
-
     let box = null;
     for (let node = input.parentElement, depth = 0; node && node !== document.body && depth < 12; node = node.parentElement, depth++) {
       if (paintsRoundedBox(node)) {
