@@ -72,6 +72,7 @@
     modePath: null,
     composerBox: null,     // { input, box } last found by findComposerBox
     barTarget: null,
+    rowBox: null,          // { node, since } while the composer box lays out in one row
   };
 
   // ---------- Extension plumbing ----------
@@ -453,6 +454,18 @@
     return style.display.includes('flex') && !style.flexDirection.startsWith('column');
   }
 
+  // Switching to Work shows the compact one-line composer for about half a second before it grows,
+  // and a bar placed underneath it for that moment then jumps inside. So a box in a row layout only
+  // gets the bar underneath once it has stayed that way; until then the bar is left out.
+  const ROW_SETTLE_MS = 1200;
+  function rowLayoutSettled(node, now = Date.now()) {
+    if (state.rowBox?.node !== node) {
+      state.rowBox = { node, since: now };
+      setTimeout(queueMount, ROW_SETTLE_MS + 50);
+    }
+    return now - state.rowBox.since >= ROW_SETTLE_MS;
+  }
+
   function mountBar() {
     const target = findComposer();
     const el = bar.root;
@@ -461,7 +474,13 @@
       return false;
     }
     const { node, mode } = target;
-    const inside = mode === 'inside' && !isRowFlex(node);
+    const rowFlex = mode === 'inside' && isRowFlex(node);
+    if (!rowFlex) state.rowBox = null;
+    else if (!rowLayoutSettled(node)) {
+      el.remove();
+      return true;
+    }
+    const inside = mode === 'inside' && !rowFlex;
     const placed = inside ? el.parentElement === node && node.lastElementChild === el : node.nextElementSibling === el;
     if (placed) return true;
     if (inside) node.append(el);
@@ -518,6 +537,7 @@
     const mode = detectMode() ?? state.mode;
     if (mode === state.mode) return;
     state.mode = mode;
+    state.rowBox = null;
     renderBar();
     recheckMountSoon();
   }
@@ -548,8 +568,9 @@
 
   function ensureMounted() {
     if (!alive()) return teardown();
-    const mounted = { bar: mountBar(), sidebar: mountSidebar() };
+    // The mode first: a switch to Work restarts the wait in mountBar before the bar is shown.
     updateMode();
+    const mounted = { bar: mountBar(), sidebar: mountSidebar() };
 
     updateStreaming();
 
