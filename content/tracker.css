@@ -1,0 +1,130 @@
+/* The composer bar and the sidebar section. Shared pieces (bars, rows, tooltip) are in ui.css. */
+
+/* ---------- Composer bar ---------- */
+
+.cgut-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 2px 14px 8px;
+  /* Spans every column when the composer is a grid. */
+  grid-column: 1 / -1;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--cgut-text-3);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.cgut-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 42%;
+  min-width: 0;
+}
+
+.cgut-bar-label {
+  color: var(--cgut-text-3);
+}
+
+.cgut-bar .cgut-progress {
+  flex: 1 1 auto;
+  min-width: 48px;
+  /* Flex centres the 6px track on the text's line box, which reads slightly high. */
+  top: 1px;
+}
+
+.cgut-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.cgut-bar-reset {
+  font-variant-numeric: tabular-nums;
+}
+
+.cgut-spend {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cgut-spend) 15%, transparent);
+  color: var(--cgut-spend);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.cgut-credits-note {
+  color: var(--cgut-spend);
+}
+
+.cgut-bar.cgut-stale {
+  opacity: 0.6;
+}
+
+@media (max-width: 520px) {
+  .cgut-bar .cgut-progress {
+    display: none;
+  }
+}
+
+/* ---------- Sidebar section ---------- */
+
+.cgut-sidebar {
+  flex-shrink: 0;
+  padding-inline: var(--padding-row-x, 8px);
+}
+
+.cgut-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 4px var(--padding-row-cell-x, var(--padding-row-x, 8px));
+  border: 0;
+  background: none;
+  color: var(--cgut-text-3);
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cgut-sidebar-header:hover {
+  color: var(--cgut-text-2);
+}
+
+.cgut-sidebar-header:focus-visible {
+  outline: 2px solid var(--cgut-accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* Like ChatGPT's own collapsible sections: the chevron fades in on hover, points down while open
+   and right while collapsed, and stays visible while collapsed. */
+.cgut-chevron {
+  display: inline-flex;
+  opacity: 0;
+  transform: rotate(90deg);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.cgut-sidebar:hover .cgut-chevron,
+.cgut-sidebar-header:focus-visible .cgut-chevron,
+.cgut-sidebar.cgut-collapsed .cgut-chevron {
+  opacity: 1;
+}
+
+.cgut-sidebar.cgut-collapsed .cgut-chevron {
+  transform: none;
+}
+
+.cgut-sidebar-body {
+  padding: 4px var(--padding-row-cell-x, var(--padding-row-x, 8px)) 6px;
+}
