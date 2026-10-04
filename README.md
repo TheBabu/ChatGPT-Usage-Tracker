@@ -2,7 +2,7 @@
 
 See your ChatGPT usage limits without leaving the chat.
 
-![The usage bar in the ChatGPT message box](docs/screenshot.png)
+<img width="2875" height="1161" alt="image" src="https://github.com/user-attachments/assets/d5937ab5-7421-4f5c-bc6d-6768487e38f8" />
 
 - A usage bar in the message box while you're in Work mode: your 5-hour usage, an arrow marking
   your weekly usage, and when the 5-hour limit resets
