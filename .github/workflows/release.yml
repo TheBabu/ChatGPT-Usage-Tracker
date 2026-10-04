@@ -1,13 +1,12 @@
-# Builds the extension zip on every pull request. A version tag (v1.2.3) or a manual run ("Run
-# workflow" on the Actions tab) publishes it as a GitHub release; a manual run tags the commit with
-# the manifest version itself. See RELEASING.md.
+# Builds the extension zip on every pull request, and publishes a GitHub release whenever a push to
+# main changes the version in manifest.json. See RELEASING.md.
 name: Release
 
 on:
   pull_request:
   push:
-    tags: ['v*']
-  workflow_dispatch:
+    branches: [main]
+    paths: [manifest.json]
 
 jobs:
   build:
@@ -16,29 +15,25 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # All history and tags, to find the last release for the notes.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Check the tag matches the manifest version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          version=$(node -p "require('./manifest.json').version")
-          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME doesn't match manifest version $version"
-            exit 1
-          fi
-
-      - name: Check the version hasn't been released
-        if: github.event_name == 'workflow_dispatch'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      # A push that touches manifest.json without changing the version publishes nothing.
+      - name: Check for a new version
+        id: version
+        if: github.event_name == 'push'
         run: |
           tag="v$(node -p "require('./manifest.json').version")"
-          if gh release view "$tag" >/dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
-            echo "::error::$tag already exists. Bump the version in manifest.json first."
-            exit 1
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "$tag is already released; nothing to publish."
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build
@@ -49,10 +44,27 @@ jobs:
           name: simple-tracker-for-chatgpt
           path: dist/*.zip
 
+      # Commits go straight to main, so the notes list commits rather than pull requests.
+      - name: Write release notes
+        if: steps.version.outputs.new == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          prev=$(git describe --tags --abbrev=0 HEAD 2>/dev/null || true)
+          {
+            echo "## Changes"
+            echo
+            git log --no-merges --format='* %s (%h)' "${prev:+$prev..}HEAD"
+            if [ -n "$prev" ]; then
+              echo
+              echo "**Full Changelog**: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/$prev...$TAG"
+            fi
+          } > notes.md
+          cat notes.md
+
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        if: steps.version.outputs.new == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          tag="v$(node -p "require('./manifest.json').version")"
-          gh release create "$tag" dist/*.zip --title "$tag" --target "$GITHUB_SHA" --generate-notes
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh release create "$TAG" dist/*.zip --title "$TAG" --target "$GITHUB_SHA" --notes-file notes.md
