@@ -12,12 +12,6 @@
   "content_scripts": [
     {
       "matches": ["https://chatgpt.com/*"],
-      "js": ["content/page-hook.js"],
-      "world": "MAIN",
-      "run_at": "document_start"
-    },
-    {
-      "matches": ["https://chatgpt.com/*"],
       "js": ["shared/usage.js", "shared/ui.js", "content/tracker.js"],
       "css": ["shared/ui.css", "content/tracker.css"]
     }

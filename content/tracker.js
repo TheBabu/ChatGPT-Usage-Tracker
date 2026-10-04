@@ -14,6 +14,7 @@
   const FORCED_MIN_GAP_MS = 2 * 1000;
   const AFTER_REPLY_DELAYS_MS = [2500, 12000]; // credit charges can land a few seconds late
   const SPEND_SETTLE_MS = 20 * 1000;
+  const REPLY_DEDUPE_MS = 5 * 1000;         // both reply signals report the same reply finishing
   const EXPIRY_GRACE_MS = 5 * 1000;
   const EXPIRY_RETRY_BASE_MS = 30 * 1000;
   const EXPIRY_RETRY_MAX_MS = 5 * 60 * 1000;
@@ -45,6 +46,11 @@
       'button[aria-label="Stop generating"]',
       'button[aria-label="Stop"]',
     ].join(','),
+    // Matched inside the composer box only, where the one "Stop…" button is the reply's.
+    stopButtonInBox: 'button[aria-label^="stop" i]',
+    // The request a reply streams over. Resource timing doesn't say the method, so this matches the
+    // POST endpoint exactly and not /conversation/<id>, which loads an old conversation.
+    replyStream: /\/backend-api\/(?:f\/)?conversation(?:[?#]|$)/,
   };
 
   const startedAt = Date.now();
@@ -58,7 +64,7 @@
     lastAttemptAt: 0,
     pollTimer: null,
     expiryRetry: null,     // { at, attempts } while a passed reset time waits for fresh data
-    generation: { hook: false, dom: false, active: false },
+    streaming: false,      // the stop button is showing
     pending: null,         // { startBalance, endedAt } for the reply in progress
     lastSpend: null,       // credits the last reply cost, when it cost any
     mountWarned: { bar: false, sidebar: false },
@@ -173,26 +179,54 @@
 
   // ---------- Replies and credit spend ----------
 
-  // Two independent signals say a reply is streaming: the fetch hook and the stop button. Either is
-  // enough, so a redesign that breaks one still leaves the other.
-  function updateGeneration() {
-    const g = state.generation;
-    const active = g.hook || g.dom;
-    if (active === g.active) return;
-    g.active = active;
-    if (active) onGenerationStart();
-    else onGenerationEnd();
+  // Two independent signals follow a reply, so a redesign that breaks one still leaves the other:
+  // the stop button shows while it streams, and the browser records a resource timing entry for the
+  // streamed request when it ends. Neither involves touching the page's own code.
+  function updateStreaming() {
+    const box = state.composerBox?.box;
+    const streaming = !!(document.querySelector(SELECTORS.stopButton) || box?.querySelector(SELECTORS.stopButtonInBox));
+    if (streaming === state.streaming) return;
+    state.streaming = streaming;
+    if (streaming) onReplyStarted();
+    else onReplyFinished();
   }
 
-  function onGenerationStart() {
-    state.pending = { startBalance: currentUsage()?.credits?.balance ?? null, endedAt: null };
+  function watchReplyStreams() {
+    try {
+      new PerformanceObserver((list) => {
+        const finished = list.getEntries().some((entry) =>
+          (entry.initiatorType === 'fetch' || entry.initiatorType === 'xmlhttprequest') && SELECTORS.replyStream.test(entry.name));
+        if (finished) onReplyFinished();
+      }).observe({ type: 'resource' });
+    } catch {
+      // No resource timing: the stop button alone still works.
+    }
+  }
+
+  function currentBalance() {
+    return currentUsage()?.credits?.balance ?? null;
+  }
+
+  function onReplyStarted() {
+    state.pending = { startBalance: currentBalance(), endedAt: null };
     state.lastSpend = null;
     renderBar();
   }
 
-  function onGenerationEnd() {
-    if (state.pending) state.pending.endedAt = Date.now();
+  // When the start went unseen, the balance now is still the one from before the reply: charges
+  // only post after it ends.
+  function onReplyFinished() {
+    const now = Date.now();
+    const pending = state.pending;
+    if (pending?.endedAt && now - pending.endedAt < REPLY_DEDUPE_MS) return;
+    if (pending && !pending.endedAt) {
+      pending.endedAt = now;
+    } else {
+      state.pending = { startBalance: currentBalance(), endedAt: now };
+      state.lastSpend = null;
+    }
     for (const delay of AFTER_REPLY_DELAYS_MS) setTimeout(() => refresh({ force: true }), delay);
+    renderBar();
   }
 
   // Compares the balance against where it stood when the reply started. Only a drop is shown; the
@@ -200,7 +234,7 @@
   function trackSpend(now) {
     const pending = state.pending;
     if (!pending) return;
-    const balance = currentUsage()?.credits?.balance ?? null;
+    const balance = currentBalance();
     if (pending.startBalance !== null && balance !== null && pending.startBalance - balance > 1e-6) {
       state.lastSpend = pending.startBalance - balance;
     }
@@ -505,8 +539,7 @@
     const mounted = { bar: mountBar(), sidebar: mountSidebar() };
     updateMode();
 
-    state.generation.dom = !!document.querySelector(SELECTORS.stopButton);
-    updateGeneration();
+    updateStreaming();
 
     if (Date.now() - startedAt < MOUNT_WARN_AFTER_MS) return;
     for (const key of ['bar', 'sidebar']) {
@@ -586,10 +619,7 @@
       return true;
     });
 
-    document.addEventListener('cgut:generation', (e) => {
-      state.generation.hook = e.detail === 'start';
-      updateGeneration();
-    });
+    watchReplyStreams();
 
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) return scheduleNext();
