@@ -87,6 +87,32 @@ button:disabled {
   opacity: 0.6;
 }
 
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--cgut-text-2);
+}
+
+.icon-button:disabled {
+  opacity: 1;
+}
+
+.icon-button.spinning svg {
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .popup-debug {
   margin-top: 10px;
   color: var(--cgut-text-2);

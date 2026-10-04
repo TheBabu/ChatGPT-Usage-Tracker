@@ -36,6 +36,7 @@
     const usage = stored.usage;
     const error = stored.usageError;
     return {
+      version: chrome.runtime.getManifest().version,
       account: usage ? `${usage.accountId.slice(0, 8)}…` : null,
       plan: usage?.planType ?? null,
       fetchedAt: usage ? new Date(usage.fetchedAt).toLocaleString() : null,
@@ -63,18 +64,17 @@
   async function refresh() {
     const button = $('refresh');
     button.disabled = true;
-    button.textContent = 'Refreshing…';
+    button.classList.add('spinning');
     try {
       await chrome.runtime.sendMessage({ type: 'cgut:refresh' });
     } finally {
       button.disabled = false;
-      button.textContent = 'Refresh';
+      button.classList.remove('spinning');
     }
   }
 
   async function copyDebug() {
     const text = [
-      `ChatGPT Usage Tracker v${chrome.runtime.getManifest().version}`,
       JSON.stringify(debugStatus(), null, 2),
       debugLogText(),
       stored.usage?.raw ? JSON.stringify(stored.usage.raw, null, 2) : '',
