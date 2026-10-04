@@ -10,10 +10,11 @@ See your ChatGPT usage limits without leaving the chat. Inspired by [lugia19's C
 - Your credit balance, and how many credits a message used when it was paid for with credits
 - Updates on its own as you chat
 
+Not affiliated with or endorsed by OpenAI.
+
+#### Developer note:
 I really liked lugia19's extension for Claude, and I am transitioning to ChatGPT since it suits my needs better but I couldn't find a good extension that is like lugia19's so I decided to basically entirely vibe code an entire extension (ironically mostly by Claude).
 I don't plan to to actively support this extension, as this is just a something I wanted personally and I thought I would share to other people. I will just update it as I personally see fit.
-
-Not affiliated with or endorsed by OpenAI.
 
 ## Install
 
