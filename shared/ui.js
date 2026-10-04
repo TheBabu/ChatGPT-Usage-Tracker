@@ -107,7 +107,7 @@
 
   function resetText(resetsAt, now) {
     if (!resetsAt) return '';
-    return resetsAt <= now ? 'Resetting…' : formatDuration(resetsAt - now);
+    return resetsAt <= now ? 'Resetting…' : `Resets in ${formatDuration(resetsAt - now)}`;
   }
 
   // ---------- Rows ----------
@@ -134,8 +134,7 @@
   }
 
   function updateLimitReset(r, win, now) {
-    const text = resetText(win.resetsAt, now);
-    r.reset.textContent = text ? `⏱ ${text}` : '';
+    r.reset.textContent = resetText(win.resetsAt, now);
     r.reset.classList.toggle('cgut-resetting', !!win.resetsAt && win.resetsAt <= now);
     setTip(r.reset, win.resetsAt ? `Resets ${new Date(win.resetsAt).toLocaleString()}` : '');
   }

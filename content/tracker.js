@@ -23,11 +23,17 @@
   // Everything that depends on ChatGPT's markup lives here, most specific first. When a redesign
   // stops the bar or the sidebar section from appearing, this is the place to look.
   const SELECTORS = {
+    // The message input. The bar goes inside the rounded box drawn around it (see findComposerBox).
+    composerInput: '[data-composer-input], #prompt-textarea, main [contenteditable="true"], main textarea',
+    // How far up from the input that box can be.
+    composerRoot: '[data-composer-surface-variant], form',
+    // Where the bar goes when no box can be found.
     composer: [
       { selector: '[data-composer-surface-variant]', mode: 'inside' },
       { selector: 'form[data-type="unified-composer"]', mode: 'after' },
       { selector: '#prompt-textarea', closest: 'form', mode: 'after' },
     ],
+    modeToggle: '[role="group"][aria-label="Composer mode"]',
     sidebar: [
       { selector: '[data-app-action-sidebar-scroll]', mode: 'afterFirstChild' },
       { selector: '#history', mode: 'before' },
@@ -56,6 +62,10 @@
     pending: null,         // { startBalance, endedAt } for the reply in progress
     lastSpend: null,       // credits the last reply cost, when it cost any
     mountWarned: { bar: false, sidebar: false },
+    mode: null,            // 'work' | 'chat' | null (not known yet) for the current page
+    modePath: null,
+    composerBox: null,     // { input, box } cache for findComposerBox
+    barTarget: null,
   };
 
   // ---------- Extension plumbing ----------
@@ -227,8 +237,9 @@
     const { error } = state;
     const freshError = error && (!usage || error.at > usage.fetchedAt) ? error : null;
 
-    // Logged out there is nothing to show, and the composer is ChatGPT's sign-up pitch anyway.
-    bar.root.hidden = freshError?.code === 'signed-out';
+    // Logged out there is nothing to show, and the composer is ChatGPT's sign-up pitch anyway. In
+    // Chat mode the limits don't apply, so the bar would only be noise.
+    bar.root.hidden = freshError?.code === 'signed-out' || state.mode === 'chat';
     bar.root.classList.toggle('cgut-stale', !!usage && !!freshError);
 
     const main = usage?.session || usage?.weekly || null;
@@ -259,14 +270,13 @@
 
     if (isSession && usage.weekly) {
       const weekly = usage.weekly;
-      const resets = weekly.resetsAt ? ` · resets in ${ui.resetText(weekly.resetsAt, now)}` : '';
+      const resets = weekly.resetsAt ? ` · ${ui.resetText(weekly.resetsAt, now).toLowerCase()}` : '';
       ui.setMarker(bar.progress, weekly.pct, `${CGUT.windowLabel(weekly, 'Weekly')}: ${CGUT.formatPct(weekly.pct)} used${resets}`);
     } else {
       ui.clearMarker(bar.progress);
     }
 
-    bar.reset.textContent = !main.resetsAt ? ''
-      : main.resetsAt <= now ? 'Resetting…' : `Resets in ${CGUT.formatDuration(main.resetsAt - now)}`;
+    bar.reset.textContent = ui.resetText(main.resetsAt, now);
     bar.reset.classList.toggle('cgut-resetting', !!main.resetsAt && main.resetsAt <= now);
     ui.setTip(bar.reset, freshError
       ? `Last update failed (${freshError.message}). Showing data from ${CGUT.formatAgo(usage.fetchedAt, now)}.`
@@ -343,7 +353,44 @@
   }
 
   // The main composer is the last visible one: an inline "edit message" composer sits above it.
+  function lastVisible(selector) {
+    const nodes = [...document.querySelectorAll(selector)].filter(isVisible);
+    return nodes[nodes.length - 1] || null;
+  }
+
+  function paintsRoundedBox(node) {
+    const style = getComputedStyle(node);
+    if ((parseFloat(style.borderTopLeftRadius) || 0) < 12) return false;
+    const bg = style.backgroundColor;
+    const transparent = bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || /\/\s*0\)$/.test(bg);
+    return !transparent || style.backgroundImage !== 'none' || style.boxShadow !== 'none';
+  }
+
+  // The rounded box ChatGPT draws around the message input: the nearest ancestor of the input that
+  // paints a background with rounded corners. Which element that is differs between the home page
+  // and a conversation, so it is found by looking rather than by name. The search stops at the
+  // composer's outer element so it can never wander out into the page.
+  function findComposerBox(input) {
+    const cached = state.composerBox;
+    if (cached?.input === input && cached.box.isConnected && paintsRoundedBox(cached.box)) return cached.box;
+
+    let box = null;
+    for (let node = input.parentElement, depth = 0; node && node !== document.body && depth < 12; node = node.parentElement, depth++) {
+      if (paintsRoundedBox(node)) {
+        box = node;
+        break;
+      }
+      if (node.matches(SELECTORS.composerRoot)) break;
+    }
+    state.composerBox = box && { input, box };
+    return box;
+  }
+
   function findComposer() {
+    const input = lastVisible(SELECTORS.composerInput);
+    const box = input && findComposerBox(input);
+    if (box) return { node: box, mode: 'inside' };
+
     for (const { selector, closest, mode } of SELECTORS.composer) {
       const nodes = [...document.querySelectorAll(selector)]
         .map((node) => (closest ? node.closest(closest) : node))
@@ -378,9 +425,62 @@
     const { node, mode } = target;
     const placed = el.parentElement === node ? node.lastElementChild === el : node.nextElementSibling === el;
     if (placed) return true;
-    if (mode === 'inside' && !isRowFlex(node)) node.append(el);
+    const inside = mode === 'inside' && !isRowFlex(node);
+    if (inside) node.append(el);
     else node.after(el);
+    if (node !== state.barTarget) {
+      state.barTarget = node;
+      log(`Composer bar placed ${inside ? 'inside' : 'after'} ${describeNode(node)}`);
+    }
     return true;
+  }
+
+  // A short label for an element, for the debug log.
+  function describeNode(node) {
+    const data = [...node.attributes].filter((a) => a.name.startsWith('data-')).slice(0, 3)
+      .map((a) => `[${a.name}${a.value ? `="${a.value.slice(0, 20)}"` : ''}]`).join('');
+    const cls = typeof node.className === 'string' ? node.className.trim().split(/\s+/).slice(0, 3).join('.') : '';
+    return `<${node.tagName.toLowerCase()}${node.id ? `#${node.id}` : ''}${cls ? `.${cls}` : ''}${data}>`;
+  }
+
+  // ---------- Chat vs Work ----------
+
+  function placeholderOf(input) {
+    const field = input.matches('textarea, [contenteditable="true"]')
+      ? input
+      : input.querySelector('textarea, [contenteditable="true"]');
+    if (!field) return '';
+    if (field.tagName === 'TEXTAREA') return field.placeholder || field.getAttribute('aria-label') || '';
+    return field.querySelector('[data-placeholder]')?.dataset.placeholder || field.getAttribute('aria-placeholder') || '';
+  }
+
+  // The 5-hour and weekly limits only apply to Work. The mode comes from the Chat/Work toggle when
+  // it is on screen, else from the input's placeholder ("Work with ChatGPT"). The toggle is read by
+  // position (first button is Chat) so it works in any language.
+  function detectMode() {
+    const toggle = document.querySelector(SELECTORS.modeToggle);
+    if (toggle && isVisible(toggle)) {
+      const pressed = [...toggle.querySelectorAll('button')].findIndex((b) => b.getAttribute('aria-pressed') === 'true');
+      if (pressed !== -1) return pressed === 0 ? 'chat' : 'work';
+    }
+    const input = lastVisible(SELECTORS.composerInput);
+    const placeholder = input ? placeholderOf(input).trim() : '';
+    if (placeholder) return /\bwork\b/i.test(placeholder) ? 'work' : 'chat';
+    if (new URLSearchParams(location.search).get('surface') === 'work') return 'work';
+    return null;
+  }
+
+  // A rich-text input drops its placeholder once something is typed, so a page keeps the last mode
+  // it saw until it navigates. Until anything is known the bar stays visible.
+  function updateMode() {
+    if (location.pathname !== state.modePath) {
+      state.modePath = location.pathname;
+      state.mode = null;
+    }
+    const mode = detectMode() ?? state.mode;
+    if (mode === state.mode) return;
+    state.mode = mode;
+    renderBar();
   }
 
   function mountSidebar() {
@@ -403,6 +503,7 @@
   function ensureMounted() {
     if (!alive()) return teardown();
     const mounted = { bar: mountBar(), sidebar: mountSidebar() };
+    updateMode();
 
     state.generation.dom = !!document.querySelector(SELECTORS.stopButton);
     updateGeneration();
@@ -460,7 +561,12 @@
     ensureMounted();
 
     observer = new MutationObserver(queueMount);
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Attributes too, but only the ones a Chat/Work switch changes, so the bar hides immediately.
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributeFilter: ['aria-pressed', 'placeholder', 'data-placeholder'],
+    });
     tickTimer = setInterval(tick, TICK_MS);
 
     chrome.storage.onChanged.addListener((changes, area) => {
