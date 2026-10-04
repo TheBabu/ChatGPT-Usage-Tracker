@@ -33,7 +33,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: simple-chatgpt-tracker
+          name: simple-tracker-for-chatgpt
           path: dist/*.zip
 
       - name: Publish release

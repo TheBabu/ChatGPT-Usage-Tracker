@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Simple ChatGPT Tracker",
+  "name": "Simple Tracker for ChatGPT",
   "version": "0.1.0",
   "description": "Shows your ChatGPT 5-hour, weekly and credit usage right in the chat window, kept up to date automatically.",
   "minimum_chrome_version": "111",
@@ -10,12 +10,6 @@
     "service_worker": "background.js"
   },
   "content_scripts": [
-    {
-      "matches": ["https://chatgpt.com/*"],
-      "js": ["content/page-hook.js"],
-      "world": "MAIN",
-      "run_at": "document_start"
-    },
     {
       "matches": ["https://chatgpt.com/*"],
       "js": ["shared/usage.js", "shared/ui.js", "content/tracker.js"],

@@ -6,7 +6,7 @@
    git tag v0.2.0
    git push origin v0.2.0
    ```
-3. The **Release** workflow builds `simple-chatgpt-tracker-v0.2.0.zip` and publishes it as a
+3. The **Release** workflow builds `simple-tracker-for-chatgpt-v0.2.0.zip` and publishes it as a
    GitHub release. The tag has to match the manifest version or the workflow stops.
 4. Upload that zip in the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole).
 
