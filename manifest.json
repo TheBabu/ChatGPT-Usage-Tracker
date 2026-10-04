@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Simple Tracker for ChatGPT",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shows your ChatGPT 5-hour, weekly and credit usage right in the chat window, kept up to date automatically.",
   "minimum_chrome_version": "111",
   "permissions": ["storage"],
