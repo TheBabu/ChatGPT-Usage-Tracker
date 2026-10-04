@@ -1,0 +1,130 @@
+/* The popup has no ChatGPT stylesheet behind it, so it defines the same theme variables the page
+   does and ui.css picks them up. */
+
+:root {
+  --app-color-text-foreground: #0d0d0d;
+  --app-color-text-foreground-secondary: #5d5d5d;
+  --app-color-text-foreground-tertiary: #8f8f8f;
+  --app-color-background-elevated-primary: #ffffff;
+  --app-color-border: rgb(0 0 0 / 0.1);
+  --app-color-button: #f3f3f3;
+  --app-color-button-hover: #e8e8e8;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-color-text-foreground: #ededed;
+    --app-color-text-foreground-secondary: #cdcdcd;
+    --app-color-text-foreground-tertiary: #afafaf;
+    --app-color-background-elevated-primary: #1b1b1b;
+    --app-color-border: rgb(255 255 255 / 0.15);
+    --app-color-button: #303030;
+    --app-color-button-hover: #3a3a3a;
+  }
+}
+
+body {
+  width: 300px;
+  margin: 0;
+  padding: 14px 16px 12px;
+  background: var(--app-color-background-elevated-primary);
+  color: var(--app-color-text-foreground);
+  font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.popup-plan {
+  padding: 1px 8px;
+  border: 1px solid var(--app-color-border);
+  border-radius: 999px;
+  color: var(--cgut-text-2);
+  font-size: 11px;
+}
+
+.popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--app-color-border);
+  color: var(--cgut-text-3);
+  font-size: 11px;
+}
+
+button {
+  padding: 4px 10px;
+  border: 1px solid var(--app-color-border);
+  border-radius: 8px;
+  background: var(--app-color-button);
+  color: var(--app-color-text-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--app-color-button-hover);
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.popup-debug {
+  margin-top: 10px;
+  color: var(--cgut-text-2);
+  font-size: 12px;
+}
+
+.popup-debug summary {
+  width: fit-content;
+  color: var(--cgut-text-3);
+  cursor: pointer;
+  user-select: none;
+}
+
+.debug-actions {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.popup-debug h2 {
+  margin: 10px 0 4px;
+  color: var(--cgut-text-3);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.popup-debug pre {
+  max-height: 160px;
+  margin: 0;
+  padding: 6px 8px;
+  overflow: auto;
+  border: 1px solid var(--app-color-border);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

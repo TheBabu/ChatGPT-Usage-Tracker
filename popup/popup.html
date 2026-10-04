@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ChatGPT Usage</title>
+  <link rel="stylesheet" href="../shared/ui.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body class="cgut-root">
+  <header class="popup-header">
+    <h1>ChatGPT Usage</h1>
+    <span id="plan" class="popup-plan" hidden></span>
+  </header>
+
+  <main id="panel"></main>
+
+  <footer class="popup-footer">
+    <span id="updated"></span>
+    <button id="refresh" type="button">Refresh</button>
+  </footer>
+
+  <details id="debug" class="popup-debug">
+    <summary>Debug</summary>
+    <div class="debug-actions">
+      <button id="copy-debug" type="button">Copy</button>
+      <button id="clear-log" type="button">Clear log</button>
+    </div>
+    <h2>Status</h2>
+    <pre id="debug-status"></pre>
+    <h2>Log</h2>
+    <pre id="debug-log"></pre>
+    <h2>Last response</h2>
+    <pre id="debug-raw"></pre>
+  </details>
+
+  <script src="../shared/usage.js"></script>
+  <script src="../shared/ui.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

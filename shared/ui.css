@@ -1,0 +1,203 @@
+/* Shared by the in-page UI and the popup. Colours come from ChatGPT's own theme variables where the
+   page defines them, so the bars follow light/dark mode; the literals are fallbacks. */
+
+.cgut-root {
+  --cgut-fg: #0d0d0d;
+  --cgut-fg-2: #5d5d5d;
+  --cgut-fg-3: #8f8f8f;
+  --cgut-bg: #ffffff;
+}
+
+:root[data-theme="dark"] .cgut-root,
+:root.dark .cgut-root {
+  --cgut-fg: #ededed;
+  --cgut-fg-2: #cdcdcd;
+  --cgut-fg-3: #afafaf;
+  --cgut-bg: #1b1b1b;
+}
+
+.cgut-root {
+  --cgut-text: var(--app-color-text-foreground, var(--cgut-fg));
+  --cgut-text-2: var(--app-color-text-foreground-secondary, var(--cgut-fg-2));
+  --cgut-text-3: var(--app-color-text-foreground-tertiary, var(--cgut-fg-3));
+  --cgut-surface: var(--app-color-background-elevated-primary, var(--cgut-bg));
+  --cgut-accent: var(--app-color-accent-blue, #3a83f7);
+  --cgut-warn: #e5484d;
+  --cgut-ok: #2fb36d;
+  --cgut-spend: #e2962f;
+  --cgut-track: color-mix(in srgb, var(--cgut-text) 12%, transparent);
+  --cgut-marker: var(--cgut-text);
+}
+
+.cgut-root[hidden],
+.cgut-root [hidden] {
+  display: none !important;
+}
+
+/* ---------- Progress bar + weekly marker ---------- */
+
+.cgut-progress {
+  position: relative;
+  width: 100%;
+  height: 6px;
+}
+
+.cgut-track {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cgut-track);
+  overflow: hidden;
+}
+
+.cgut-fill {
+  width: 0;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cgut-accent);
+  transition: width 300ms ease, background-color 300ms ease;
+}
+
+.cgut-progress.cgut-warn .cgut-fill {
+  background: var(--cgut-warn);
+}
+
+/* The arrow sits above the bar at the weekly percentage, with a tick through the bar itself. The
+   element is wider than what it draws so it is easy to hover. */
+.cgut-marker {
+  position: absolute;
+  top: -8px;
+  bottom: 0;
+  width: 12px;
+  transform: translateX(-50%);
+  cursor: default;
+}
+
+.cgut-marker::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid var(--cgut-marker);
+}
+
+.cgut-marker::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  height: 6px;
+  transform: translateX(-50%);
+  border-radius: 1px;
+  background: var(--cgut-marker);
+}
+
+.cgut-marker.cgut-warn {
+  --cgut-marker: var(--cgut-warn);
+}
+
+/* ---------- Rows (sidebar + popup) ---------- */
+
+.cgut-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cgut-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 5px;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.cgut-row-label {
+  min-width: 52px;
+  color: var(--cgut-text-2);
+}
+
+.cgut-pct {
+  min-width: 30px;
+  color: var(--cgut-accent);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.cgut-pct.cgut-warn {
+  color: var(--cgut-warn);
+}
+
+.cgut-row-reset {
+  margin-left: auto;
+  color: var(--cgut-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.cgut-resetting {
+  color: var(--cgut-ok);
+}
+
+.cgut-credits-row .cgut-row-top {
+  margin-bottom: 2px;
+}
+
+.cgut-credits-value {
+  margin-left: auto;
+  color: var(--cgut-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cgut-row-sub {
+  width: fit-content;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--cgut-text-3);
+}
+
+.cgut-note {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--cgut-text-3);
+}
+
+.cgut-note-warn {
+  color: var(--cgut-warn);
+}
+
+/* ---------- Tooltip ---------- */
+
+.cgut-tooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483647;
+  max-width: 260px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--cgut-text);
+  color: var(--cgut-surface);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: normal;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.15);
+}
+
+.cgut-tooltip-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cgut-fill,
+  .cgut-tooltip {
+    transition: none;
+  }
+}
