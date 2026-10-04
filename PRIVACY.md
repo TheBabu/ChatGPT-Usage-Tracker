@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Simple ChatGPT Tracker shows your ChatGPT usage limits on chatgpt.com.
+Simple Tracker for ChatGPT shows your ChatGPT usage limits on chatgpt.com.
 
 **What it accesses.** While you're signed in to chatgpt.com, the extension uses your existing
 ChatGPT session to read your usage limits and credit balance from chatgpt.com. It does not read

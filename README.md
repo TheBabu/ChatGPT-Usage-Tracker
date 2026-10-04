@@ -1,4 +1,4 @@
-# Simple ChatGPT Tracker
+# Simple Tracker for ChatGPT
 
 See your ChatGPT usage limits without leaving the chat.
 

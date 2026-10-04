@@ -1,4 +1,4 @@
-// Packs the extension into dist/simple-chatgpt-tracker-v<version>.zip, ready to upload to the
+// Packs the extension into dist/simple-tracker-for-chatgpt-v<version>.zip, ready to upload to the
 // Chrome Web Store or attach to a GitHub release. No dependencies: the zip is written by hand.
 //
 // Usage: node scripts/build.mjs
@@ -115,7 +115,7 @@ function buildZip(entries) {
 
 const zip = buildZip(files.map((name) => ({ name, data: readFileSync(join(ROOT, name)) })));
 const outDir = join(ROOT, 'dist');
-const outFile = join(outDir, `simple-chatgpt-tracker-v${manifest.version}.zip`);
+const outFile = join(outDir, `simple-tracker-for-chatgpt-v${manifest.version}.zip`);
 mkdirSync(outDir, { recursive: true });
 writeFileSync(outFile, zip);
 
