@@ -1,11 +1,13 @@
-# Builds the extension zip on every pull request, and on a version tag (v1.2.3) publishes it as a
-# GitHub release. See RELEASING.md.
+# Builds the extension zip on every pull request. A version tag (v1.2.3) or a manual run ("Run
+# workflow" on the Actions tab) publishes it as a GitHub release; a manual run tags the commit with
+# the manifest version itself. See RELEASING.md.
 name: Release
 
 on:
   pull_request:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 jobs:
   build:
@@ -28,6 +30,17 @@ jobs:
             exit 1
           fi
 
+      - name: Check the version hasn't been released
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$(node -p "require('./manifest.json').version")"
+          if gh release view "$tag" >/dev/null 2>&1 || git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "::error::$tag already exists. Bump the version in manifest.json first."
+            exit 1
+          fi
+
       - name: Build
         run: node scripts/build.mjs
 
@@ -37,7 +50,9 @@ jobs:
           path: dist/*.zip
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          tag="v$(node -p "require('./manifest.json').version")"
+          gh release create "$tag" dist/*.zip --title "$tag" --target "$GITHUB_SHA" --generate-notes
