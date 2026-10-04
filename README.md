@@ -1,6 +1,8 @@
-# Simple Tracker for ChatGPT
+# Simple Usage Tracker for ChatGPT
 
 See your ChatGPT usage limits without leaving the chat.
+
+![The usage bar in the ChatGPT message box](docs/screenshot.png)
 
 - A usage bar in the message box while you're in Work mode: your 5-hour usage, an arrow marking
   your weekly usage, and when the 5-hour limit resets
@@ -24,3 +26,5 @@ Everything stays in your browser, and the extension only talks to chatgpt.com. S
 [privacy policy](PRIVACY.md).
 
 Inspired by [lugia19's Claude Usage Tracker](https://github.com/lugia19/Claude-Usage-Extension).
+
+Not affiliated with or endorsed by OpenAI. ChatGPT is a trademark of OpenAI.
