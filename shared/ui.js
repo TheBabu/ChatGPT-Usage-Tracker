@@ -129,14 +129,12 @@
     r.pct.textContent = formatPct(win.pct);
     r.pct.classList.toggle('cgut-warn', win.pct >= WARN_PCT);
     setProgress(r.progress, win.pct);
-    setTip(r.progress.root, `${formatPct(win.pct)} of your ${label.toLowerCase()} limit used`);
     updateLimitReset(r, win, now);
   }
 
   function updateLimitReset(r, win, now) {
     r.reset.textContent = resetText(win.resetsAt, now);
     r.reset.classList.toggle('cgut-resetting', !!win.resetsAt && win.resetsAt <= now);
-    setTip(r.reset, win.resetsAt ? `Resets ${new Date(win.resetsAt).toLocaleString()}` : '');
   }
 
   function createCreditsRow() {
@@ -155,7 +153,6 @@
     r.sub.textContent = usedThisMonth > 0
       ? `${formatCredits(usedThisMonth)} used this month`
       : 'None used this month';
-    setTip(r.sub, "Estimated from drops in your credit balance while over a limit. ChatGPT doesn't report credit spending directly.");
   }
 
   // ---------- Panel: the stack of rows shown in the sidebar and the popup ----------
