@@ -266,6 +266,12 @@
 
   const bar = createBar();
 
+  // The same line for the bar and the weekly arrow: "5-hour: 5% used · Resets in 4h 28m".
+  function limitTip(win, label, now) {
+    const resets = ui.resetText(win.resetsAt, now);
+    return `${label}: ${CGUT.formatPct(win.pct)} used${resets ? ` · ${resets}` : ''}`;
+  }
+
   function renderBar(now = Date.now()) {
     const usage = currentUsage();
     const { error } = state;
@@ -300,12 +306,10 @@
     bar.pct.classList.toggle('cgut-warn', main.pct >= CGUT.WARN_PCT);
     ui.setTip(bar.pct, '');
     ui.setProgress(bar.progress, main.pct);
-    ui.setTip(bar.progress.root, `${CGUT.formatPct(main.pct)} of your ${label.toLowerCase()} limit used`);
+    ui.setTip(bar.progress.root, limitTip(main, label, now));
 
     if (isSession && usage.weekly) {
-      const weekly = usage.weekly;
-      const resets = weekly.resetsAt ? ` · ${ui.resetText(weekly.resetsAt, now).toLowerCase()}` : '';
-      ui.setMarker(bar.progress, weekly.pct, `${CGUT.windowLabel(weekly, 'Weekly')}: ${CGUT.formatPct(weekly.pct)} used${resets}`);
+      ui.setMarker(bar.progress, usage.weekly.pct, limitTip(usage.weekly, CGUT.windowLabel(usage.weekly, 'Weekly'), now));
     } else {
       ui.clearMarker(bar.progress);
     }
@@ -370,7 +374,6 @@
   function renderSidebar(now = Date.now()) {
     const usage = currentUsage();
     sidebar.panel.render({ usage, error: state.error, ledger: state.ledger }, now);
-    ui.setTip(sidebar.header, usage ? `Updated ${CGUT.formatAgo(usage.fetchedAt, now)}` : '');
   }
 
   function render() {
@@ -457,9 +460,9 @@
       return false;
     }
     const { node, mode } = target;
-    const placed = el.parentElement === node ? node.lastElementChild === el : node.nextElementSibling === el;
-    if (placed) return true;
     const inside = mode === 'inside' && !isRowFlex(node);
+    const placed = inside ? el.parentElement === node && node.lastElementChild === el : node.nextElementSibling === el;
+    if (placed) return true;
     if (inside) node.append(el);
     else node.after(el);
     if (node !== state.barTarget) {
@@ -515,6 +518,14 @@
     if (mode === state.mode) return;
     state.mode = mode;
     renderBar();
+    recheckMountSoon();
+  }
+
+  // Switching Chat/Work animates the composer, and which element paints its box can change part
+  // way through. Animations don't show up as DOM changes, so look again as it settles.
+  const RECHECK_DELAYS_MS = [150, 400, 800, 1500];
+  function recheckMountSoon() {
+    for (const delay of RECHECK_DELAYS_MS) setTimeout(queueMount, delay);
   }
 
   function mountSidebar() {
@@ -601,6 +612,8 @@
       attributeFilter: ['aria-pressed', 'placeholder', 'data-placeholder'],
     });
     tickTimer = setInterval(tick, TICK_MS);
+    document.addEventListener('transitionend', queueMount, true);
+    document.addEventListener('animationend', queueMount, true);
 
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
