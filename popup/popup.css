@@ -110,8 +110,22 @@ button:disabled {
   }
 }
 
-.popup-debug {
+.popup-link {
+  display: block;
+  width: fit-content;
   margin-top: 10px;
+  color: var(--cgut-text-3);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.popup-link:hover {
+  color: var(--cgut-text-2);
+  text-decoration: underline;
+}
+
+.popup-debug {
+  margin-top: 6px;
   color: var(--cgut-text-2);
   font-size: 12px;
 }

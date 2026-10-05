@@ -1,9 +1,10 @@
 // Owns the shared state in chrome.storage.local: the latest usage, the last error, the per-account
 // monthly credit tally and a short debug log. Tabs do the fetching; this worker stores what they
-// report, and fetches itself only when the popup asks and no chatgpt.com tab can.
+// report, and fetches itself only when the popup asks and no chatgpt.com tab can. After an update
+// it also opens the What's new page.
 'use strict';
 
-importScripts('shared/usage.js');
+importScripts('shared/usage.js', 'shared/changelog.js');
 
 const LOG_LIMIT = 150;
 const LEDGER_MONTHS_KEPT = 12;
@@ -123,6 +124,38 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return true;
 });
 
-chrome.runtime.onInstalled.addListener(({ reason }) => {
+// After an update that has release notes, opens them in a tab behind the current one, so it is
+// there to read without interrupting a chat. Reloading the same version (as in development), an
+// update without notes, and turning the page off on the page itself all open nothing.
+async function showWhatsNew(previousVersion) {
+  const version = chrome.runtime.getManifest().version;
+  if (!previousVersion || CGUT.compareVersions(version, previousVersion) <= 0) return;
+  if (!CGUT.changelogSince(previousVersion, version).length) return;
+  const { whatsNewOnUpdate } = await chrome.storage.local.get('whatsNewOnUpdate');
+  if (whatsNewOnUpdate === false) return;
+  await openWhatsNew(previousVersion);
+}
+
+// Chrome can install an update while no window is open (running in the background, or a Mac with
+// every window closed). There is nowhere to put the tab then, so it opens in the next window.
+async function openWhatsNew(previousVersion, windowId) {
+  const url = chrome.runtime.getURL(`whats-new/whats-new.html?from=${encodeURIComponent(previousVersion)}`);
+  try {
+    await chrome.tabs.create({ url, active: false, ...(windowId ? { windowId } : {}) });
+  } catch (e) {
+    await chrome.storage.local.set({ whatsNewPending: previousVersion });
+    log(`What's new will open in the next window (${e.message})`);
+  }
+}
+
+chrome.windows.onCreated.addListener(async ({ id }) => {
+  const { whatsNewPending } = await chrome.storage.local.get('whatsNewPending');
+  if (!whatsNewPending) return;
+  await chrome.storage.local.remove('whatsNewPending');
+  openWhatsNew(whatsNewPending, id);
+}, { windowTypes: ['normal'] });
+
+chrome.runtime.onInstalled.addListener(({ reason, previousVersion }) => {
   log(`Extension ${reason} (v${chrome.runtime.getManifest().version})`);
+  if (reason === 'update') showWhatsNew(previousVersion);
 });

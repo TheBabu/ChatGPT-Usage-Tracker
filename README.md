@@ -32,8 +32,9 @@ ChatGPT session to read your usage limits and credit balance from chatgpt.com. I
 your conversations, and it never sees your password.
 
 **What it stores:** Your latest usage numbers, a running total of credits used per month, whether
-the sidebar section is collapsed, and a short troubleshooting log. All of it is kept in your
-browser's extension storage and is removed when you uninstall the extension.
+the sidebar section is collapsed, whether to show release notes after updates, and a short
+troubleshooting log. All of it is kept in your browser's extension storage and is removed when you
+uninstall the extension.
 
 **What it shares:** Nothing. The extension only communicates with chatgpt.com. It has no servers,
 analytics or tracking, and no data is sold or transferred to anyone.

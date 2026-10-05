@@ -9,7 +9,7 @@ import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const INCLUDE = ['manifest.json', 'background.js', 'content', 'shared', 'popup', 'icons'];
+const INCLUDE = ['manifest.json', 'background.js', 'content', 'shared', 'popup', 'whats-new', 'icons'];
 
 const manifest = JSON.parse(readFileSync(join(ROOT, 'manifest.json'), 'utf8'));
 
@@ -31,6 +31,12 @@ const referenced = [
 ].filter(Boolean);
 for (const file of referenced) {
   if (!existsSync(join(ROOT, file))) fail(`manifest refers to missing file ${file}`);
+}
+
+// A version without release notes updates quietly; that's allowed, but easy to do by accident.
+const changelog = readFileSync(join(ROOT, 'shared/changelog.js'), 'utf8');
+if (!changelog.includes(`version: '${manifest.version}'`)) {
+  console.warn(`build: no entry for ${manifest.version} in shared/changelog.js, so this update won't open What's new`);
 }
 
 function listFiles(path) {
