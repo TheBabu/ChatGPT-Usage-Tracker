@@ -29,8 +29,10 @@
     composerInput: '[data-composer-input], #prompt-textarea, main [contenteditable="true"], main textarea',
     // How far up from the input that box can be.
     composerRoot: '[data-composer-surface-variant], form',
-    // The spinner in the send button while ChatGPT is still loading the composer (its models).
-    composerLoading: '#composer-submit-button [class*="animate-spin"], [data-testid="send-button"] [class*="animate-spin"]',
+    // A composer that is still loading. After a reload ChatGPT first shows a stand-in box (its input
+    // is #pending-home-input, its send button is busy with a spinner) and replaces it with the live
+    // one once its code has loaded.
+    composerLoading: '#pending-home-input, button[aria-busy="true"], #composer-submit-button [class*="animate-spin"]',
     // Where the bar goes when no box can be found.
     composer: [
       { selector: '[data-composer-surface-variant]', mode: 'inside' },
@@ -572,10 +574,11 @@
     // The box was replaced or changed layout under the bar: take it out and open it again in the
     // new spot.
     if (state.barOpen) dropBar();
-    // ChatGPT rebuilds the box once the composer finishes loading, which threw the bar out again
-    // moments after it had opened. So it waits for the send button's spinner to go; swapping the
-    // spinner out is a DOM change, so the observer looks again the moment it does.
-    if ((node.closest('form') || node).querySelector(SELECTORS.composerLoading)) return true;
+    // A bar put in the stand-in box ChatGPT shows while it loads was thrown out with it moments
+    // later and came back in the live box. So it waits for the live box; the swap is a DOM change,
+    // so the observer looks again the moment it happens.
+    const root = node.closest(SELECTORS.composerRoot) || node;
+    if (root.matches(SELECTORS.composerLoading) || root.querySelector(SELECTORS.composerLoading)) return true;
     placeBar(node, inside);
     setBarOpen(true);
     return true;

@@ -84,9 +84,11 @@ ChatGPT's markup changes often, and none of it is a public API.
   - The bar opens and closes by animating its own height (see `setBarOpen`), the moment the mode
     changes. It used to wait for the box to hold still first; on today's composer that only made
     it feel slow, so the wait was removed.
-  - After a reload ChatGPT shows a spinner in the send button until its models load, then
-    rebuilds the box. The bar doesn't open while that spinner shows (`SELECTORS.composerLoading`),
-    or it gets thrown out and comes back moments later.
+  - After a reload ChatGPT first shows a stand-in box, built before its code runs: the input is
+    `#pending-home-input`, the send button is `aria-busy` with a spinner, and there is no `<form>`.
+    Once its code has loaded (the page is too busy to run anything else meanwhile) it replaces that
+    box with the live one. The bar never opens in the stand-in (`SELECTORS.composerLoading`), or
+    it gets thrown out with it and comes back moments later.
   - The box is currently a CSS grid, so the bar gives itself a row below the others.
 - **Chat vs Work:** the bar only shows in Work mode. The mode is read from the input's placeholder
   ("Work on anything"). While the page loads the placeholder is "Loading..." in either mode, which
