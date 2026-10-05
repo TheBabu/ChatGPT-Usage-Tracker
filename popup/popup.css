@@ -36,7 +36,7 @@ body {
 
 .popup-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 12px;
@@ -46,16 +46,6 @@ h1 {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  line-height: 18px;
-}
-
-/* Filled in once the option is read; the height is kept meanwhile so the popup doesn't jump. */
-.popup-subtitle {
-  min-height: 16px;
-  margin: 1px 0 0;
-  color: var(--cgut-text-3);
-  font-size: 12px;
-  line-height: 16px;
 }
 
 .popup-plan {

@@ -117,8 +117,9 @@
   white-space: nowrap;
 }
 
+/* Just wide enough for "Weekly", so the percentages line up without a wide gap after the labels. */
 .cgut-row-label {
-  min-width: 52px;
+  min-width: 42px;
   color: var(--cgut-text-2);
 }
 

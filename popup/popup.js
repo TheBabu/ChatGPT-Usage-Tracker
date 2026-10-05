@@ -9,7 +9,6 @@
 
   const STALE_ON_OPEN_MS = 60 * 1000;
   const KEYS = ['usage', 'usageError', 'creditLedger', 'debugLog', 'usageDisplay'];
-  const DISPLAY_NOTES = { used: "Showing how much you've used", left: 'Showing how much you have left' };
 
   const panel = new ui.UsagePanel();
   $('panel').append(panel.root);
@@ -23,8 +22,6 @@
     const usage = stored.usage || null;
     const display = stored.usageDisplay === 'left' ? 'left' : 'used';
     panel.render({ usage, error: stored.usageError || null, ledger: stored.creditLedger || {}, display }, now);
-
-    $('display-note').textContent = DISPLAY_NOTES[display];
     for (const input of displayInputs) input.checked = input.value === display;
 
     const plan = CGUT.planLabel(usage?.planType);
