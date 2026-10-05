@@ -41,9 +41,9 @@ Node 22 or newer.
 Before you call a change done:
 
 1. `npm run build` passes.
-2. Load the extension by hand and check the change.
-3. For anything you couldn't check (most things on chatgpt.com need a signed-in account), say
-   what wasn't tested.
+2. If you can, load the extension in a browser and check the change yourself; don't hand that to
+   the maintainer. For anything you couldn't check (most things on chatgpt.com need a signed-in
+   account), say what wasn't tested.
 
 ## Code style
 
