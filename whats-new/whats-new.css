@@ -1,0 +1,181 @@
+/* The What's new page. Same colours as the popup, light and dark. */
+
+:root {
+  --fg: #0d0d0d;
+  --fg-2: #5d5d5d;
+  --fg-3: #8f8f8f;
+  --bg: #ffffff;
+  --card: #f9f9f9;
+  --border: rgb(0 0 0 / 0.1);
+  --accent: #2a78d6;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fg: #ededed;
+    --fg-2: #cdcdcd;
+    --fg-3: #afafaf;
+    --bg: #1b1b1b;
+    --card: #242424;
+    --border: rgb(255 255 255 / 0.15);
+    --accent: #5b9cf0;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: ui-sans-serif, -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 56px 24px 40px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.page-header img {
+  border-radius: 10px;
+}
+
+.product {
+  margin: 0;
+  color: var(--fg-2);
+  font-size: 13px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.updated-from {
+  margin: 0 0 12px;
+  color: var(--fg-2);
+  font-size: 13px;
+}
+
+/* ---------- Entries ---------- */
+
+.entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+  color: var(--fg-2);
+  font-size: 13px;
+}
+
+.entry-version {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.entry-new {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.entry-title {
+  margin: 4px 0 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.entry-changes {
+  margin: 12px 0 0;
+  padding-left: 20px;
+}
+
+.entry-changes li + li {
+  margin-top: 6px;
+}
+
+/* The latest release, front and centre. */
+.entry-latest {
+  padding: 28px 28px 26px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--card);
+}
+
+.entry-latest .entry-title {
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.entry-latest .entry-changes {
+  font-size: 16px;
+}
+
+.earlier {
+  margin-top: 44px;
+}
+
+.earlier h2 {
+  margin: 0 0 4px;
+  color: var(--fg-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.entry-earlier {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.entry-earlier .entry-title {
+  font-size: 16px;
+}
+
+.entry-empty {
+  color: var(--fg-2);
+}
+
+/* ---------- Footer ---------- */
+
+.page-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 36px;
+  color: var(--fg-2);
+  font-size: 13px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.toggle input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+a {
+  color: var(--accent);
+}

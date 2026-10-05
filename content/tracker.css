@@ -2,14 +2,12 @@
 
 /* ---------- Composer bar ---------- */
 
+/* Opens and closes by growing its one row from nothing, so the composer box around it grows and
+   shrinks smoothly. The clip hides the content while the row is shorter than it. */
 .cgut-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: grid;
+  grid-template-rows: 1fr;
   width: 100%;
-  box-sizing: border-box;
-  /* Clear of the box's rounded corners. */
-  padding: 2px 20px 10px;
   /* Spans every column when the composer is a grid. */
   grid-column: 1 / -1;
   font-size: 12px;
@@ -17,6 +15,45 @@
   color: var(--cgut-text-3);
   white-space: nowrap;
   user-select: none;
+  /* ChatGPT's own easing for the composer, so the bar moves the box the way ChatGPT does. */
+  transition: grid-template-rows 260ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.cgut-bar.cgut-bar-closed {
+  grid-template-rows: 0fr;
+}
+
+.cgut-bar-clip {
+  min-height: 0;
+}
+
+.cgut-bar-closed > .cgut-bar-clip,
+.cgut-bar-moving > .cgut-bar-clip {
+  overflow: hidden;
+}
+
+.cgut-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  /* Clear of the box's rounded corners. */
+  padding: 2px 20px 10px;
+  transition: opacity 260ms ease;
+}
+
+/* Closing, the content goes at once and only the space it took shrinks away: ChatGPT may be
+   animating the box by scaling it at the same moment, which would stretch a bar still on show. */
+.cgut-bar-closed .cgut-bar-row {
+  opacity: 0;
+  transition-duration: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cgut-bar,
+  .cgut-bar-row {
+    transition: none;
+  }
 }
 
 .cgut-bar-left {
