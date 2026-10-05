@@ -24,9 +24,7 @@ Chrome 111. The only site it talks to is chatgpt.com.
 | `release-notes/` | The Release notes page. The notes themselves, written for users, are in `changelog.json`, which GitHub releases use too; `versions.js` compares versions for the page, the worker and the release script. |
 | `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
 | `scripts/release-notes.mjs` | Writes the GitHub release notes from `release-notes/changelog.json`. |
-| `tests/unit/` | Node's built-in test runner, no dependencies. |
-| `tests/e2e/` | The extension in a real Chromium, driven by Playwright. |
-| `.github/workflows/release.yml` | Unit tests and build on every PR; a release when `main` gets a new version, with its notes from `release-notes/changelog.json`. |
+| `.github/workflows/release.yml` | A build on every PR; a release when `main` gets a new version, with its notes from `release-notes/changelog.json`. |
 
 The scripts share code through one global, `globalThis.CGUT`, so load order matters: `usage.js`
 first, then `ui.js` or `release-notes/versions.js` add to it. The shipped code uses no ES modules, because
@@ -36,17 +34,14 @@ content scripts can't.
 
 Node 22 or newer.
 
-- `npm test`: unit tests. Needs no `npm install`.
 - `npm run build`: packs `dist/simple-tracker-for-chatgpt-v<version>.zip`.
-- `npm run test:e2e`: the Release notes flow end to end in Chromium (about 25 s), with screenshots of
-  the page in `test-results/`. Run `npm install` and `npx playwright install chromium` once first.
 - By hand: `chrome://extensions` → Developer mode → Load unpacked → the repo root. After an edit,
   press Reload on the extension, then reload the chatgpt.com tab for content script changes.
 
 Before you call a change done:
 
-1. `npm test` and `npm run build` pass.
-2. You ran `npm run test:e2e` if you touched `background.js`, `popup/` or `release-notes/`.
+1. `npm run build` passes.
+2. Load the extension by hand and check the change.
 3. For anything you couldn't check (most things on chatgpt.com need a signed-in account), say
    what wasn't tested.
 

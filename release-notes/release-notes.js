@@ -39,7 +39,7 @@
     return root;
   }
 
-  // The page is aria-busy until the notes are in, so tests (and screen readers) know when it's done.
+  // The page is aria-busy until the notes are in, so screen readers know when it's done.
   async function render() {
     document.title = `Release notes · ${manifest.name}`;
     $('product').textContent = manifest.name;
