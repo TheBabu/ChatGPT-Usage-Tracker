@@ -318,7 +318,7 @@
 
     const main = usage?.session || usage?.weekly || null;
     if (!main) {
-      bar.label.textContent = 'Usage:';
+      bar.label.textContent = 'Usage';
       ui.setPctText(bar.pct, freshError ? 'unavailable' : usage ? 'n/a' : '…');
       ui.setTip(bar.pct.root, freshError
         ? `Couldn't load usage: ${freshError.message}`
@@ -334,7 +334,7 @@
 
     const isSession = main === usage.session;
     const label = CGUT.windowLabel(main, isSession ? '5-hour' : 'Weekly');
-    bar.label.textContent = `${label}:`;
+    bar.label.textContent = label;
     ui.setPct(bar.pct, main.pct, state.display);
     ui.setTip(bar.pct.root, '');
     ui.setProgress(bar.progress, main.pct, state.display);
