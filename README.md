@@ -25,6 +25,12 @@ I don't plan to to actively support this extension, as this is just a something 
 2. Go to `chrome://extensions` and turn on **Developer mode**.
 3. Click **Load unpacked** and choose the unzipped folder.
 
+## Development
+
+[AGENTS.md](AGENTS.md) covers how the code is laid out, how to test it and the conventions to
+follow. It's written for coding agents (Codex, Claude Code, Cursor, Copilot and others) and people
+alike.
+
 ## Privacy Policy
 
 **What it accesses:** While you're signed in to chatgpt.com, the extension uses your existing

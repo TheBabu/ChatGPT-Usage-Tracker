@@ -7,6 +7,7 @@ import { deflateRawSync } from 'node:zlib';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Script } from 'node:vm';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const INCLUDE = ['manifest.json', 'background.js', 'content', 'shared', 'popup', 'whats-new', 'icons'];
@@ -46,6 +47,15 @@ function listFiles(path) {
 }
 
 const files = INCLUDE.flatMap(listFiles).map((path) => path.split(sep).join('/'));
+
+// Catch a script that doesn't parse before it ships. Each one is only compiled, never run.
+for (const file of files.filter((name) => name.endsWith('.js'))) {
+  try {
+    new Script(readFileSync(join(ROOT, file), 'utf8'), { filename: file });
+  } catch (e) {
+    fail(`${file} doesn't parse: ${e.message}`);
+  }
+}
 
 // ---------- Minimal zip writer (deflate, no zip64) ----------
 
