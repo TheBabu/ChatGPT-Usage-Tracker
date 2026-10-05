@@ -3,7 +3,8 @@
     "version": "0.4.2",
     "date": "2026-10-05",
     "changes": [
-      "The Usage heading in the sidebar now matches the text, color and spacing of Pinned and Projects."
+      "The Usage heading in the sidebar now matches the text, color and spacing of Pinned and Projects.",
+      "Removed the extra gap between Usage and Pinned, whether Usage is open or collapsed."
     ]
   },
   {

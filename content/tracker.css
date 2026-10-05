@@ -114,11 +114,8 @@
 
 .cgut-sidebar {
   flex-shrink: 0;
-  margin-bottom: var(--sidebar-expanded-section-margin-bottom, 20px);
-}
-
-.cgut-sidebar.cgut-collapsed {
-  margin-bottom: var(--sidebar-collapsed-section-margin-bottom, 12px);
+  /* The following native section already supplies the gap at this insertion point. */
+  margin-bottom: 0;
 }
 
 /* Match the native Pinned/Projects section headings, including their theme and text tokens. */
