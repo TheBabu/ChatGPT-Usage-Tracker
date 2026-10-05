@@ -114,28 +114,39 @@
 
 .cgut-sidebar {
   flex-shrink: 0;
-  padding-inline: var(--padding-row-x, 8px);
+  margin-bottom: var(--sidebar-expanded-section-margin-bottom, 20px);
 }
 
+.cgut-sidebar.cgut-collapsed {
+  margin-bottom: var(--sidebar-collapsed-section-margin-bottom, 12px);
+}
+
+/* Match the native Pinned/Projects section headings, including their theme and text tokens. */
 .cgut-sidebar-header {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 4px var(--padding-row-cell-x, var(--padding-row-x, 8px));
+  padding: 6px 16px;
   border: 0;
   background: none;
-  color: var(--cgut-text-3);
+  color: var(--text-tertiary, var(--cgut-text-3));
   font: inherit;
-  font-size: 13px;
-  line-height: 20px;
-  text-align: left;
+  font-size: var(--text-sm, 14px);
+  font-weight: 500;
+  line-height: var(--text-sm--line-height, 1.428571);
+  font-variation-settings: "opsz" var(--text-sm--optical-size, 14);
+  text-align: start;
   cursor: pointer;
+  user-select: none;
 }
 
-.cgut-sidebar-header:hover {
-  color: var(--cgut-text-2);
+.cgut-sidebar-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cgut-sidebar-header:focus-visible {
@@ -148,6 +159,7 @@
    and right while collapsed, and stays visible while collapsed. */
 .cgut-chevron {
   display: inline-flex;
+  flex-shrink: 0;
   opacity: 0;
   transform: rotate(90deg);
   transition: opacity 150ms ease, transform 150ms ease;
@@ -164,5 +176,5 @@
 }
 
 .cgut-sidebar-body {
-  padding: 4px var(--padding-row-cell-x, var(--padding-row-x, 8px)) 6px;
+  padding: 4px 16px 6px;
 }
