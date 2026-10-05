@@ -13,7 +13,7 @@
       title: 'Smoother switching to Work, and release notes',
       changes: [
         'The usage bar no longer jitters when you switch from Chat to Work. It slides in at the bottom of the message box as soon as you switch.',
-        "The bar no longer flickers in and out while ChatGPT loads. It appears once ChatGPT shows that you're in Work.",
+        'The bar no longer flickers in and out after you reload ChatGPT. It appears once the message box has finished loading.',
         'Switching back to Chat closes the bar smoothly instead of the box jumping.',
         "The bar sits below the message box's buttons again, not above the text field.",
         "This page: after an update, a tab shows what changed. You can turn that off at the bottom of the page, and open it any time from the extension's toolbar popup.",

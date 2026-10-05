@@ -29,6 +29,8 @@
     composerInput: '[data-composer-input], #prompt-textarea, main [contenteditable="true"], main textarea',
     // How far up from the input that box can be.
     composerRoot: '[data-composer-surface-variant], form',
+    // The spinner in the send button while ChatGPT is still loading the composer (its models).
+    composerLoading: '#composer-submit-button [class*="animate-spin"], [data-testid="send-button"] [class*="animate-spin"]',
     // Where the bar goes when no box can be found.
     composer: [
       { selector: '[data-composer-surface-variant]', mode: 'inside' },
@@ -570,6 +572,10 @@
     // The box was replaced or changed layout under the bar: take it out and open it again in the
     // new spot.
     if (state.barOpen) dropBar();
+    // ChatGPT rebuilds the box once the composer finishes loading, which threw the bar out again
+    // moments after it had opened. So it waits for the send button's spinner to go; swapping the
+    // spinner out is a DOM change, so the observer looks again the moment it does.
+    if ((node.closest('form') || node).querySelector(SELECTORS.composerLoading)) return true;
     placeBar(node, inside);
     setBarOpen(true);
     return true;
