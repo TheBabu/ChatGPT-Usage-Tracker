@@ -24,9 +24,10 @@ Chrome 111. The only site it talks to is chatgpt.com.
 | `popup/` | The toolbar popup: usage, options (the bar in the message box can be turned off), and a Debug section with the log and the last raw response. |
 | `release-notes/` | The Release notes page. |
 | `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
+| `scripts/release-notes.mjs` | Writes the GitHub release notes from `shared/changelog.js`. |
 | `tests/unit/` | Node's built-in test runner, no dependencies. |
 | `tests/e2e/` | The extension in a real Chromium, driven by Playwright, with a stand-in chatgpt.com where a test needs one. |
-| `.github/workflows/release.yml` | Unit tests and build on every PR; a release when `main` gets a new version. |
+| `.github/workflows/release.yml` | Unit tests and build on every PR; a release when `main` gets a new version, with its notes from `shared/changelog.js`. |
 
 The scripts share code through one global, `globalThis.CGUT`, so load order matters: `usage.js`
 first, then `ui.js` or `changelog.js` add to it. The shipped code uses no ES modules, because

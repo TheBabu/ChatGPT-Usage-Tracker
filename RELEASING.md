@@ -6,9 +6,10 @@
    Entries for versions newer than the manifest stay hidden, so notes can be written ahead.
 2. Bump `version` in `manifest.json` and push it to `main`.
 3. The **Release** workflow sees the new version, tags the commit (`v0.2.0`), builds
-   `simple-tracker-for-chatgpt-v0.2.0.zip` and publishes it as a GitHub release. The notes list the
-   commits since the last release. A push that changes `manifest.json` but not the version
-   publishes nothing.
+   `simple-tracker-for-chatgpt-v0.2.0.zip` and publishes it as a GitHub release. Its notes are the
+   version's entry from `shared/changelog.js` (`node scripts/release-notes.mjs` previews them), with
+   the commits since the last release folded away below; a version without an entry lists just the
+   commits. A push that changes `manifest.json` but not the version publishes nothing.
 4. Upload that zip in the [Chrome Web Store developer dashboard](https://chrome.google.com/webstore/devconsole).
 
 Each version is released once and never replaced, so ship a fix as a new version.
