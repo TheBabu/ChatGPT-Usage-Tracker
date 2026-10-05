@@ -1,4 +1,5 @@
-// The toolbar popup: the same usage rows as the sidebar, a refresh button, and a debug panel.
+// The toolbar popup: the same usage rows as the sidebar, a refresh button, options, and a debug
+// panel.
 'use strict';
 
 (() => {
@@ -83,6 +84,14 @@
     $('copy-debug').textContent = 'Copied';
     setTimeout(() => { $('copy-debug').textContent = 'Copy'; }, 1500);
   }
+
+  // Someone who keeps the sidebar open already sees the same numbers there, so the bar in the
+  // message box can be turned off. Open chatgpt.com tabs pick the change up from storage.
+  const showBar = $('show-bar');
+  chrome.storage.local.get('showComposerBar').then(({ showComposerBar }) => {
+    showBar.checked = showComposerBar !== false;
+  });
+  showBar.addEventListener('change', () => chrome.storage.local.set({ showComposerBar: showBar.checked }));
 
   // Opens the Release notes page in a tab (a plain link would open it inside the popup).
   $('release-notes').addEventListener('click', (e) => {

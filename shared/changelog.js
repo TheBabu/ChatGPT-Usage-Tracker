@@ -8,6 +8,15 @@
 (() => {
   const CHANGELOG = [
     {
+      version: '0.3.0',
+      date: '2026-10-05',
+      title: 'Turn off the bar in the message box',
+      changes: [
+        "If you keep the sidebar open, you can turn off the usage bar in the message box from the extension's toolbar popup. The sidebar section keeps showing your usage.",
+        'The icon at the top of the Release notes page is sharp on high-resolution screens.',
+      ],
+    },
+    {
       version: '0.2.1',
       date: '2026-10-05',
       changes: [

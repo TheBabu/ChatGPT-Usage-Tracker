@@ -110,6 +110,69 @@ button:disabled {
   }
 }
 
+.popup-options {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--app-color-border);
+}
+
+.popup-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--cgut-text-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* A checkbox drawn as a switch, since the setting applies the moment it changes. */
+.switch {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 30px;
+  height: 18px;
+  margin: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cgut-text) 22%, transparent);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 150ms ease;
+}
+
+.switch:checked {
+  background: var(--cgut-accent);
+}
+
+.switch:checked::before {
+  transform: translateX(12px);
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--cgut-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .switch,
+  .switch::before {
+    transition: none;
+  }
+}
+
 .popup-extras {
   position: relative;
   margin-top: 10px;

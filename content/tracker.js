@@ -65,6 +65,7 @@
     error: null,
     ledger: {},
     collapsed: false,
+    showBar: true,         // the popup's "Usage bar in the message box" option
     inFlight: null,
     lastAttemptAt: 0,
     pollTimer: null,
@@ -293,6 +294,7 @@
     return error && (!usage || error.at > usage.fetchedAt) ? error : null;
   }
 
+  // Turned off in the popup, the bar stays closed; the sidebar section still shows the numbers.
   // Logged out there is nothing to show, and the composer is ChatGPT's sign-up pitch anyway. In
   // Chat mode the limits don't apply, so the bar would only be noise.
   //
@@ -301,6 +303,7 @@
   // So the first time it waits to be told, but not forever, in case the mode can't be read at all.
   // Later on, say after navigating with a draft typed in, an unknown mode keeps the bar showing.
   function barWanted() {
+    if (!state.showBar) return false;
     if (freshErrorFor(currentUsage())?.code === 'signed-out') return false;
     if (state.mode) return state.mode === 'work';
     return state.modeSeen || Date.now() - startedAt >= MODE_WAIT_MS;
@@ -710,10 +713,11 @@
   }
 
   async function init() {
-    const stored = await chrome.storage.local.get(['usage', 'usageError', 'creditLedger', 'sidebarCollapsed']);
+    const stored = await chrome.storage.local.get(['usage', 'usageError', 'creditLedger', 'sidebarCollapsed', 'showComposerBar']);
     state.usage = stored.usage || null;
     state.error = stored.usageError || null;
     state.ledger = stored.creditLedger || {};
+    state.showBar = stored.showComposerBar !== false;
     setCollapsed(stored.sidebarCollapsed === true);
 
     ui.installTooltips();
@@ -735,6 +739,10 @@
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       if (changes.sidebarCollapsed) setCollapsed(changes.sidebarCollapsed.newValue === true);
+      if (changes.showComposerBar) {
+        state.showBar = changes.showComposerBar.newValue !== false;
+        queueMount(); // opens or closes the bar
+      }
       if (!changes.usage && !changes.usageError && !changes.creditLedger) return;
       if (changes.usage) state.usage = changes.usage.newValue || null;
       if (changes.usageError) state.error = changes.usageError.newValue || null;

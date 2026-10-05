@@ -105,12 +105,13 @@ test('older versions fold away so the footer stays close', async (t) => {
   const chrome = await launchChrome();
   t.after(() => chrome.quit());
   await chrome.openWindow();
-  // A copy at 0.9.0 with made-up releases 0.3.0 to 0.9.0 ahead of the real ones.
-  const dir = copyExtension('0.9.0');
+  // A copy at 9.9.0 with made-up releases 9.3.0 to 9.9.0 ahead of the real ones, far enough ahead
+  // that a real release can't share a version with them.
+  const dir = copyExtension('9.9.0');
   const file = join(dir, 'shared', 'changelog.js');
-  const fake = [9, 8, 7, 6, 5, 4, 3].map((minor) => `{ version: '0.${minor}.0', date: '2026-11-0${minor}', changes: ['Change in 0.${minor}.0.'] },`).join('\n');
+  const fake = [9, 8, 7, 6, 5, 4, 3].map((minor) => `{ version: '9.${minor}.0', date: '2026-11-0${minor}', changes: ['Change in 9.${minor}.0.'] },`).join('\n');
   const real = readFileSync(file, 'utf8');
-  const realCount = real.match(/version: '/g).length; // all older than 0.3.0, so all shown at 0.9.0
+  const realCount = real.match(/version: '/g).length; // all older than 9.3.0, so all shown at 9.9.0
   writeFileSync(file, real.replace('const CHANGELOG = [', `const CHANGELOG = [\n${fake}`));
   const older = (n) => `Show ${n} older versions`;
   const id = await chrome.loadUnpacked(dir);
@@ -124,16 +125,16 @@ test('older versions fold away so the footer stays close', async (t) => {
 
   const byHand = await chrome.open(`chrome-extension://${id}/release-notes/release-notes.html`);
   assert.deepEqual(await read(byHand), {
-    shown: ['Version 0.8.0', 'Version 0.7.0', 'Version 0.6.0'],
-    folded: older(3 + realCount), // 0.5.0, 0.4.0, 0.3.0 and the real releases
+    shown: ['Version 9.8.0', 'Version 9.7.0', 'Version 9.6.0'],
+    folded: older(3 + realCount), // 9.5.0, 9.4.0, 9.3.0 and the real releases
     foldedCount: 3 + realCount,
   }, 'three earlier versions, the rest folded');
 
-  // An update from 0.4.0 brought in 0.5.0 to 0.9.0; all of them stay in view.
-  const updated = await chrome.open(`chrome-extension://${id}/release-notes/release-notes.html?from=0.4.0`);
+  // An update from 9.4.0 brought in 9.5.0 to 9.9.0; all of them stay in view.
+  const updated = await chrome.open(`chrome-extension://${id}/release-notes/release-notes.html?from=9.4.0`);
   assert.deepEqual(await read(updated), {
-    shown: ['Version 0.8.0', 'Version 0.7.0', 'Version 0.6.0', 'Version 0.5.0'],
-    folded: older(2 + realCount), // 0.4.0, 0.3.0 and the real releases
+    shown: ['Version 9.8.0', 'Version 9.7.0', 'Version 9.6.0', 'Version 9.5.0'],
+    folded: older(2 + realCount), // 9.4.0, 9.3.0 and the real releases
     foldedCount: 2 + realCount,
   }, 'versions the update brought in are never folded');
 });
