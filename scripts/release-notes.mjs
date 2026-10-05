@@ -1,5 +1,5 @@
 // Prints the GitHub release notes for the version in manifest.json, in Markdown, from
-// release-notes/changelog.json: the same notes users see on the Release notes page. Prints nothing
+// release-notes/changelog.json: the same notes users see on the Release Notes page. Prints nothing
 // when the version has no entry, so the workflow can fall back to listing commits. See RELEASING.md.
 //
 // Usage: node scripts/release-notes.mjs [previous version]

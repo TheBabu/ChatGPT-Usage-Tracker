@@ -1,7 +1,7 @@
 # Releasing
 
 1. Add an entry for the new version at the top of `release-notes/changelog.json`, written for
-   users. After the update, the extension opens it in a Release notes tab (behind the current one),
+   users. After the update, the extension opens it in a Release Notes tab (behind the current one),
    above the notes for earlier versions. A version without an entry updates quietly, which suits a
    small fix. Entries for versions newer than the manifest stay hidden, so notes can be written
    ahead.

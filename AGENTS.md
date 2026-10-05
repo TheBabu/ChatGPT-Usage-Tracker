@@ -16,12 +16,12 @@ Chrome 111. The only site it talks to is chatgpt.com.
 | Path | What it does |
 |---|---|
 | `manifest.json` | Permissions are `storage` plus the chatgpt.com host, and nothing else. |
-| `background.js` | Service worker. Owns the shared state in `chrome.storage.local` (usage, last error, monthly credit ledger, debug log) and serializes writes to it. Fetches only when the popup asks and no chatgpt.com tab can. Opens the Release notes page after an update. |
+| `background.js` | Service worker. Owns the shared state in `chrome.storage.local` (usage, last error, monthly credit ledger, debug log) and serializes writes to it. Fetches only when the popup asks and no chatgpt.com tab can. Opens the Release Notes page after an update. |
 | `content/tracker.js`, `tracker.css` | Runs on chatgpt.com: polls usage, notices replies, draws the bar in the message box and the sidebar section. Everything that depends on ChatGPT's markup is in `SELECTORS` at the top. |
 | `shared/usage.js` | Fetching and normalizing usage, and formatting. Used by the worker, the content script and the popup. |
 | `shared/ui.js`, `ui.css` | Progress bars, rows and the tooltip shared by the sidebar and the popup. |
 | `popup/` | The toolbar popup: usage, options (percentages as used or left, and the bar in the message box can be turned off), and a Debug section with the log and the last raw response. |
-| `release-notes/` | The Release notes page. The notes themselves, written for users, are in `changelog.json`, which GitHub releases use too; `versions.js` compares versions for the page, the worker and the release script. |
+| `release-notes/` | The Release Notes page. The notes themselves, written for users, are in `changelog.json`, which GitHub releases use too; `versions.js` compares versions for the page, the worker and the release script. |
 | `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
 | `scripts/release-notes.mjs` | Writes the GitHub release notes from `release-notes/changelog.json`. |
 | `.github/workflows/release.yml` | A build on every PR; a release when `main` gets a new version, with its notes from `release-notes/changelog.json`. |
@@ -101,8 +101,8 @@ ChatGPT's markup changes often, and none of it is a public API.
 - **Version bumps:** pushing a new `version` in `manifest.json` to `main` publishes a GitHub
   release automatically. Don't change the version unless the maintainer asks.
 - **Release notes:** for a change users would notice, add to the entry for the next version at
-  the top of `release-notes/changelog.json`, written for users. The Release notes page and the
-  GitHub release both show it. An update with notes opens the Release notes page; one without
+  the top of `release-notes/changelog.json`, written for users. The Release Notes page and the
+  GitHub release both show it. An update with notes opens the Release Notes page; one without
   updates quietly. See `RELEASING.md`.
 
 ## Privacy

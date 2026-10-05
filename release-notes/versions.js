@@ -1,5 +1,5 @@
 // Version numbers, and which of the release notes in changelog.json a version shows. Loaded by the
-// background worker (after shared/usage.js), the Release notes page and scripts/release-notes.mjs,
+// background worker (after shared/usage.js), the Release Notes page and scripts/release-notes.mjs,
 // which each read changelog.json themselves and pass it in. See RELEASING.md for writing the notes.
 'use strict';
 

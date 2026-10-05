@@ -1,7 +1,7 @@
 // Owns the shared state in chrome.storage.local: the latest usage, the last error, the per-account
 // monthly credit tally and a short debug log. Tabs do the fetching; this worker stores what they
 // report, and fetches itself only when the popup asks and no chatgpt.com tab can. After an update
-// it also opens the Release notes page.
+// it also opens the Release Notes page.
 'use strict';
 
 importScripts('shared/usage.js', 'release-notes/versions.js');
@@ -145,7 +145,7 @@ async function openReleaseNotes(previousVersion, windowId) {
     await chrome.tabs.create({ url, active: false, ...(windowId ? { windowId } : {}) });
   } catch (e) {
     await chrome.storage.local.set({ releaseNotesPending: previousVersion });
-    log(`Release notes will open in the next window (${e.message})`);
+    log(`Release Notes will open in the next window (${e.message})`);
   }
 }
 

@@ -1,4 +1,4 @@
-// The Release notes page: the latest release's notes up top, earlier releases below. The background
+// The Release Notes page: the latest release's notes up top, earlier releases below. The background
 // worker opens it after an update (with ?from=<previous version>), and the toolbar popup links to it.
 // The notes come from changelog.json; depends on versions.js.
 'use strict';
@@ -41,7 +41,7 @@
 
   // The page is aria-busy until the notes are in, so screen readers know when it's done.
   async function render() {
-    document.title = `Release notes · ${manifest.name}`;
+    document.title = `Release Notes · ${manifest.name}`;
     $('product').textContent = manifest.name;
 
     if (from && CGUT.compareVersions(from, manifest.version) < 0) {

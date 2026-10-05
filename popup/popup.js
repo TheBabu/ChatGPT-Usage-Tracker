@@ -102,7 +102,7 @@
   });
   showBar.addEventListener('change', () => chrome.storage.local.set({ showComposerBar: showBar.checked }));
 
-  // Opens the Release notes page in a tab (a plain link would open it inside the popup).
+  // Opens the Release Notes page in a tab (a plain link would open it inside the popup).
   $('release-notes').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('release-notes/release-notes.html') });

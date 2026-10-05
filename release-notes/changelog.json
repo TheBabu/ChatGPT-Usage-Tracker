@@ -16,16 +16,16 @@
     "title": "Turn off the bar in the message box",
     "changes": [
       "If you keep the sidebar open, you can turn off the usage bar in the message box from the extension's toolbar popup. The sidebar section keeps showing your usage.",
-      "The icon at the top of the Release notes page is sharp on high-resolution screens."
+      "The icon at the top of the Release Notes page is sharp on high-resolution screens."
     ]
   },
   {
     "version": "0.2.1",
     "date": "2026-10-05",
     "changes": [
-      "What's new is now called Release notes, since it lists every version.",
+      "What's new is now called Release Notes, since it lists every version.",
       "Older versions fold away behind \"Show older versions\", so the page stays short.",
-      "In the toolbar popup, the Release notes link sits beside Debug."
+      "In the toolbar popup, the Release Notes link sits beside Debug."
     ]
   },
   {

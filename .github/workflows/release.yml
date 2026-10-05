@@ -45,7 +45,7 @@ jobs:
           path: dist/*.zip
 
       # The notes are the ones written for users in release-notes/changelog.json, the same the
-      # Release notes page shows, with the commits since the last release folded away below. A
+      # Release Notes page shows, with the commits since the last release folded away below. A
       # version without notes lists just the commits. Commits go straight to main, so they stand in
       # for pull requests.
       - name: Write release notes
