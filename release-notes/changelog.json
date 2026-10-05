@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.4.0",
+    "date": "2026-10-05",
+    "title": "See how much usage you have left",
+    "changes": [
+      "Your usage can now show how much you have left instead of how much you've used. Choose Used or Left under Options in the extension's toolbar popup.",
+      "Every percentage says \"used\" or \"left\" next to it, in the popup, the sidebar and the bar in the message box, so you always know which one you're looking at.",
+      "The toolbar popup is now called ChatGPT Usage Tracker, says under its title which way your usage is shown, and keeps its settings under an Options heading."
+    ]
+  },
+  {
     "version": "0.3.0",
     "date": "2026-10-05",
     "title": "Turn off the bar in the message box",

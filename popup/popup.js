@@ -8,10 +8,12 @@
   const $ = (id) => document.getElementById(id);
 
   const STALE_ON_OPEN_MS = 60 * 1000;
-  const KEYS = ['usage', 'usageError', 'creditLedger', 'debugLog'];
+  const KEYS = ['usage', 'usageError', 'creditLedger', 'debugLog', 'usageDisplay'];
+  const DISPLAY_NOTES = { used: "Showing how much you've used", left: 'Showing how much you have left' };
 
   const panel = new ui.UsagePanel();
   $('panel').append(panel.root);
+  const displayInputs = document.querySelectorAll('input[name="usage-display"]');
   ui.installTooltips();
 
   let stored = {};
@@ -19,7 +21,11 @@
   function render() {
     const now = Date.now();
     const usage = stored.usage || null;
-    panel.render({ usage, error: stored.usageError || null, ledger: stored.creditLedger || {} }, now);
+    const display = stored.usageDisplay === 'left' ? 'left' : 'used';
+    panel.render({ usage, error: stored.usageError || null, ledger: stored.creditLedger || {}, display }, now);
+
+    $('display-note').textContent = DISPLAY_NOTES[display];
+    for (const input of displayInputs) input.checked = input.value === display;
 
     const plan = CGUT.planLabel(usage?.planType);
     $('plan').hidden = !plan;
@@ -83,6 +89,12 @@
     await navigator.clipboard.writeText(text);
     $('copy-debug').textContent = 'Copied';
     setTimeout(() => { $('copy-debug').textContent = 'Copy'; }, 1500);
+  }
+
+  // The percentages can say how much is used (as ChatGPT reports it) or how much is left. The
+  // popup, the sidebar and the bar in the message box all follow, the open tabs through storage.
+  for (const input of displayInputs) {
+    input.addEventListener('change', () => chrome.storage.local.set({ usageDisplay: input.value }));
   }
 
   // Someone who keeps the sidebar open already sees the same numbers there, so the bar in the

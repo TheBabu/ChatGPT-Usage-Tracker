@@ -8,6 +8,8 @@ See your ChatGPT usage limits without leaving the chat. Inspired by [lugia19's C
   your weekly usage, and when the 5-hour limit resets (you can turn it off in the toolbar popup)
 - A Usage section in the sidebar, which you can collapse
 - Your credit balance, and how many credits a message used when it was paid for with credits
+- Percentages that show how much you've used, or how much you have left (pick one in the toolbar
+  popup)
 - Updates on its own as you chat
 
 Not affiliated with or endorsed by OpenAI.
@@ -33,7 +35,8 @@ your conversations, and it never sees your password.
 
 **What it stores:** Your latest usage numbers, a running total of credits used per month, whether
 the sidebar section is collapsed, whether to show the usage bar in the message box, whether to show
-release notes after updates, and a short troubleshooting log. All of it is kept in your browser's
+usage as used or left, whether to show release notes after updates, and a short troubleshooting
+log. All of it is kept in your browser's
 extension storage and is removed when you uninstall the extension.
 
 **What it shares:** Nothing. The extension only communicates with chatgpt.com. It has no servers,

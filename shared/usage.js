@@ -243,6 +243,22 @@
     return `${Math.round(pct)}%`;
   }
 
+  // The popup's "Show usage" option: 'used' counts up as ChatGPT reports it, 'left' counts down
+  // from 100. Anything else (the option was never set) is 'used'. Percentages stay as used
+  // everywhere else, including the warning threshold; only what is drawn turns around.
+  function shownPct(pct, display) {
+    return display === 'left' ? 100 - pct : pct;
+  }
+
+  function usageWord(display) {
+    return display === 'left' ? 'left' : 'used';
+  }
+
+  // "4% used" or "96% left".
+  function formatUsage(pct, display) {
+    return `${formatPct(shownPct(pct, display))} ${usageWord(display)}`;
+  }
+
   // Small amounts keep an extra digit so a cheap message doesn't read as 0.
   function formatCredits(n) {
     if (n === null || n === undefined) return '–';
@@ -276,6 +292,9 @@
     formatDuration,
     formatAgo,
     formatPct,
+    shownPct,
+    usageWord,
+    formatUsage,
     formatCredits,
     monthKey,
     creditsUsedThisMonth,

@@ -66,6 +66,7 @@
     ledger: {},
     collapsed: false,
     showBar: true,         // the popup's "Usage bar in the message box" option
+    display: 'used',       // the popup's "Show usage" option: 'used' or 'left'
     inFlight: null,
     lastAttemptAt: 0,
     pollTimer: null,
@@ -262,9 +263,9 @@
     const row = ui.el('div', 'cgut-bar-row');
     const left = ui.el('div', 'cgut-bar-left');
     const label = ui.el('span', 'cgut-bar-label');
-    const pct = ui.el('span', 'cgut-pct');
+    const pct = ui.createPct();
     const progress = ui.createProgress();
-    left.append(label, pct, progress.root);
+    left.append(label, pct.root, progress.root);
 
     const right = ui.el('div', 'cgut-bar-right');
     const spend = ui.el('span', 'cgut-spend');
@@ -282,10 +283,11 @@
 
   const bar = createBar();
 
-  // The same line for the bar and the weekly arrow: "5-hour: 5% used · Resets in 4h 28m".
+  // The same line for the bar and the weekly arrow: "5-hour: 5% used · Resets in 4h 28m", or
+  // "95% left" when the popup is set to show what is left.
   function limitTip(win, label, now) {
     const resets = ui.resetText(win.resetsAt, now);
-    return `${label}: ${CGUT.formatPct(win.pct)} used${resets ? ` · ${resets}` : ''}`;
+    return `${label}: ${CGUT.formatUsage(win.pct, state.display)}${resets ? ` · ${resets}` : ''}`;
   }
 
   // The last error, if nothing has loaded since.
@@ -317,9 +319,8 @@
     const main = usage?.session || usage?.weekly || null;
     if (!main) {
       bar.label.textContent = 'Usage:';
-      bar.pct.textContent = freshError ? 'unavailable' : usage ? 'n/a' : '…';
-      bar.pct.classList.remove('cgut-warn');
-      ui.setTip(bar.pct, freshError
+      ui.setPctText(bar.pct, freshError ? 'unavailable' : usage ? 'n/a' : '…');
+      ui.setTip(bar.pct.root, freshError
         ? `Couldn't load usage: ${freshError.message}`
         : usage ? "ChatGPT isn't reporting any usage limits for this account." : 'Loading usage…');
       ui.setProgress(bar.progress, 0);
@@ -334,14 +335,14 @@
     const isSession = main === usage.session;
     const label = CGUT.windowLabel(main, isSession ? '5-hour' : 'Weekly');
     bar.label.textContent = `${label}:`;
-    bar.pct.textContent = CGUT.formatPct(main.pct);
-    bar.pct.classList.toggle('cgut-warn', main.pct >= CGUT.WARN_PCT);
-    ui.setTip(bar.pct, '');
-    ui.setProgress(bar.progress, main.pct);
+    ui.setPct(bar.pct, main.pct, state.display);
+    ui.setTip(bar.pct.root, '');
+    ui.setProgress(bar.progress, main.pct, state.display);
     ui.setTip(bar.progress.root, limitTip(main, label, now));
 
     if (isSession && usage.weekly) {
-      ui.setMarker(bar.progress, usage.weekly.pct, limitTip(usage.weekly, CGUT.windowLabel(usage.weekly, 'Weekly'), now));
+      const weeklyTip = limitTip(usage.weekly, CGUT.windowLabel(usage.weekly, 'Weekly'), now);
+      ui.setMarker(bar.progress, usage.weekly.pct, weeklyTip, state.display);
     } else {
       ui.clearMarker(bar.progress);
     }
@@ -405,7 +406,7 @@
 
   function renderSidebar(now = Date.now()) {
     const usage = currentUsage();
-    sidebar.panel.render({ usage, error: state.error, ledger: state.ledger }, now);
+    sidebar.panel.render({ usage, error: state.error, ledger: state.ledger, display: state.display }, now);
   }
 
   function render() {
@@ -713,11 +714,12 @@
   }
 
   async function init() {
-    const stored = await chrome.storage.local.get(['usage', 'usageError', 'creditLedger', 'sidebarCollapsed', 'showComposerBar']);
+    const stored = await chrome.storage.local.get(['usage', 'usageError', 'creditLedger', 'sidebarCollapsed', 'showComposerBar', 'usageDisplay']);
     state.usage = stored.usage || null;
     state.error = stored.usageError || null;
     state.ledger = stored.creditLedger || {};
     state.showBar = stored.showComposerBar !== false;
+    state.display = stored.usageDisplay === 'left' ? 'left' : 'used';
     setCollapsed(stored.sidebarCollapsed === true);
 
     ui.installTooltips();
@@ -742,6 +744,10 @@
       if (changes.showComposerBar) {
         state.showBar = changes.showComposerBar.newValue !== false;
         queueMount(); // opens or closes the bar
+      }
+      if (changes.usageDisplay) {
+        state.display = changes.usageDisplay.newValue === 'left' ? 'left' : 'used';
+        render();
       }
       if (!changes.usage && !changes.usageError && !changes.creditLedger) return;
       if (changes.usage) state.usage = changes.usage.newValue || null;

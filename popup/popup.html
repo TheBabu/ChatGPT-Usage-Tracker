@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>ChatGPT Usage</title>
+  <title>ChatGPT Usage Tracker</title>
   <link rel="stylesheet" href="../shared/ui.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body class="cgut-root">
   <header class="popup-header">
-    <h1>ChatGPT Usage</h1>
+    <div>
+      <h1>ChatGPT Usage Tracker</h1>
+      <!-- Says which way the numbers count, following the "Show usage" option. -->
+      <p id="display-note" class="popup-subtitle"></p>
+    </div>
     <span id="plan" class="popup-plan" hidden></span>
   </header>
 
@@ -24,7 +28,15 @@
     </button>
   </footer>
 
-  <section class="popup-options">
+  <section class="popup-options" aria-labelledby="options-heading">
+    <h2 id="options-heading">Options</h2>
+    <div class="popup-option">
+      <span id="display-label">Show usage</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="display-label">
+        <label><input type="radio" name="usage-display" value="used" checked><span>Used</span></label>
+        <label><input type="radio" name="usage-display" value="left"><span>Left</span></label>
+      </div>
+    </div>
     <label class="popup-option">
       Usage bar in the message box
       <input id="show-bar" class="switch" type="checkbox" role="switch" checked>

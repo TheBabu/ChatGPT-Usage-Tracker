@@ -1,10 +1,10 @@
-// DOM pieces shared by the in-page sidebar section and the popup: progress bars, the weekly marker,
-// limit rows, the credits row and a small tooltip. Depends on shared/usage.js.
+// DOM pieces shared by the in-page sidebar section and the popup: percentages, progress bars, the
+// weekly marker, limit rows, the credits row and a small tooltip. Depends on shared/usage.js.
 'use strict';
 
 (() => {
   const {
-    WARN_PCT, windowLabel, formatPct, formatDuration, formatAgo, formatCredits,
+    WARN_PCT, windowLabel, formatPct, shownPct, usageWord, formatDuration, formatAgo, formatCredits,
     hasCreditsInfo, creditsUsedThisMonth,
   } = globalThis.CGUT;
 
@@ -72,6 +72,33 @@
     document.addEventListener('scroll', hideTip, true);
   }
 
+  // ---------- Percentage: "4% used" or "96% left" ----------
+
+  // The word is spelled out next to every number, so the option in the popup never leaves anyone
+  // guessing which way the numbers count.
+  function createPct() {
+    const root = el('span', 'cgut-pct');
+    const value = el('span', 'cgut-pct-value');
+    const word = el('span', 'cgut-pct-word');
+    root.append(value, ' ', word);
+    return { root, value, word };
+  }
+
+  // `pct` is the used percentage; `display` is the popup's "Show usage" option.
+  function setPct(node, pct, display) {
+    node.value.textContent = formatPct(shownPct(pct, display));
+    node.word.textContent = usageWord(display);
+    node.word.hidden = false;
+    node.root.classList.toggle('cgut-warn', pct >= WARN_PCT);
+  }
+
+  // In place of a number, while there is none ("unavailable", "…").
+  function setPctText(node, text) {
+    node.value.textContent = text;
+    node.word.hidden = true;
+    node.root.classList.remove('cgut-warn');
+  }
+
   // ---------- Progress bar with optional weekly marker ----------
 
   function createProgress() {
@@ -83,17 +110,18 @@
     return { root, fill, marker: null };
   }
 
-  function setProgress(progress, pct) {
-    progress.fill.style.width = `${pct}%`;
+  // Showing what is left, the bar fills with what is left, and warns when little is.
+  function setProgress(progress, pct, display) {
+    progress.fill.style.width = `${shownPct(pct, display)}%`;
     progress.root.classList.toggle('cgut-warn', pct >= WARN_PCT);
   }
 
-  function setMarker(progress, pct, tip) {
+  function setMarker(progress, pct, tip, display) {
     if (!progress.marker) {
       progress.marker = el('div', 'cgut-marker');
       progress.root.append(progress.marker);
     }
-    progress.marker.style.left = `${Math.max(0, Math.min(100, pct))}%`;
+    progress.marker.style.left = `${Math.max(0, Math.min(100, shownPct(pct, display)))}%`;
     progress.marker.classList.toggle('cgut-warn', pct >= WARN_PCT);
     setTip(progress.marker, tip);
   }
@@ -116,19 +144,18 @@
     const row = el('div', 'cgut-row');
     const top = el('div', 'cgut-row-top');
     const label = el('span', 'cgut-row-label');
-    const pct = el('span', 'cgut-pct');
+    const pct = createPct();
     const reset = el('span', 'cgut-row-reset');
-    top.append(label, pct, reset);
+    top.append(label, pct.root, reset);
     const progress = createProgress();
     row.append(top, progress.root);
     return { row, label, pct, reset, progress };
   }
 
-  function updateLimitRow(r, win, label, now) {
+  function updateLimitRow(r, win, label, display, now) {
     r.label.textContent = label;
-    r.pct.textContent = formatPct(win.pct);
-    r.pct.classList.toggle('cgut-warn', win.pct >= WARN_PCT);
-    setProgress(r.progress, win.pct);
+    setPct(r.pct, win.pct, display);
+    setProgress(r.progress, win.pct, display);
     updateLimitReset(r, win, now);
   }
 
@@ -167,15 +194,16 @@
       this.root.append(this.session.row, this.weekly.row, this.credits.row, this.note);
     }
 
-    // { usage, error, ledger } as kept in chrome.storage.local.
-    render({ usage, error, ledger }, now = Date.now()) {
+    // { usage, error, ledger } as kept in chrome.storage.local, and `display`, the "Show usage"
+    // option.
+    render({ usage, error, ledger, display }, now = Date.now()) {
       const { session, weekly, credits, note } = this;
 
       session.row.hidden = !usage?.session;
-      if (usage?.session) updateLimitRow(session, usage.session, windowLabel(usage.session, '5-hour'), now);
+      if (usage?.session) updateLimitRow(session, usage.session, windowLabel(usage.session, '5-hour'), display, now);
 
       weekly.row.hidden = !usage?.weekly;
-      if (usage?.weekly) updateLimitRow(weekly, usage.weekly, windowLabel(usage.weekly, 'Weekly'), now);
+      if (usage?.weekly) updateLimitRow(weekly, usage.weekly, windowLabel(usage.weekly, 'Weekly'), display, now);
 
       const showCredits = hasCreditsInfo(usage);
       credits.row.hidden = !showCredits;
@@ -203,6 +231,9 @@
     el,
     setTip,
     installTooltips,
+    createPct,
+    setPct,
+    setPctText,
     createProgress,
     setProgress,
     setMarker,

@@ -20,7 +20,7 @@ Chrome 111. The only site it talks to is chatgpt.com.
 | `content/tracker.js`, `tracker.css` | Runs on chatgpt.com: polls usage, notices replies, draws the bar in the message box and the sidebar section. Everything that depends on ChatGPT's markup is in `SELECTORS` at the top. |
 | `shared/usage.js` | Fetching and normalizing usage, and formatting. Used by the worker, the content script and the popup. |
 | `shared/ui.js`, `ui.css` | Progress bars, rows and the tooltip shared by the sidebar and the popup. |
-| `popup/` | The toolbar popup: usage, options (the bar in the message box can be turned off), and a Debug section with the log and the last raw response. |
+| `popup/` | The toolbar popup: usage, options (percentages as used or left, and the bar in the message box can be turned off), and a Debug section with the log and the last raw response. |
 | `release-notes/` | The Release notes page. The notes themselves, written for users, are in `changelog.json`, which GitHub releases use too; `versions.js` compares versions for the page, the worker and the release script. |
 | `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
 | `scripts/release-notes.mjs` | Writes the GitHub release notes from `release-notes/changelog.json`. |

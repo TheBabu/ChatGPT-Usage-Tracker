@@ -123,6 +123,7 @@
 }
 
 .cgut-pct {
+  flex-shrink: 0;
   min-width: 30px;
   color: var(--cgut-accent);
   font-weight: 500;
@@ -131,6 +132,11 @@
 
 .cgut-pct.cgut-warn {
   color: var(--cgut-warn);
+}
+
+/* "used" or "left" after the number, in its colour but not bold, so the number still leads. */
+.cgut-pct-word {
+  font-weight: 400;
 }
 
 .cgut-row-reset {
