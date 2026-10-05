@@ -19,6 +19,7 @@
   const EXPIRY_RETRY_BASE_MS = 30 * 1000;
   const EXPIRY_RETRY_MAX_MS = 5 * 60 * 1000;
   const MOUNT_WARN_AFTER_MS = 15 * 1000;
+  const MODE_WAIT_MS = 5 * 1000;           // after a page load, for ChatGPT to say Chat or Work
   const TICK_MS = 5 * 1000;
 
   // Everything that depends on ChatGPT's markup lives here, most specific first. When a redesign
@@ -28,8 +29,6 @@
     composerInput: '[data-composer-input], #prompt-textarea, main [contenteditable="true"], main textarea',
     // How far up from the input that box can be.
     composerRoot: '[data-composer-surface-variant], form',
-    // Set once the composer has grown to its two-row layout (Work's, once its buttons load).
-    composerGrown: 'form[data-expanded]',
     // Where the bar goes when no box can be found.
     composer: [
       { selector: '[data-composer-surface-variant]', mode: 'inside' },
@@ -72,12 +71,11 @@
     mountWarned: { bar: false, sidebar: false },
     mode: null,            // 'work' | 'chat' | null (not known yet) for the current page
     modePath: null,
-    modeChangedAt: 0,
+    modeSeen: false,       // a mode has been read since the page loaded
     composerBox: null,     // { input, box } last found by findComposerBox
     barTarget: null,
     barOpen: false,        // shown, or opening
     barSpot: null,         // { node, inside } where the bar was last put
-    still: null,           // { node, look, since, watchedFrom } while waiting for the box to hold still
   };
 
   // ---------- Extension plumbing ----------
@@ -293,8 +291,15 @@
 
   // Logged out there is nothing to show, and the composer is ChatGPT's sign-up pitch anyway. In
   // Chat mode the limits don't apply, so the bar would only be noise.
+  //
+  // Right after a page loads the mode isn't known yet, and opening the bar then made it flicker:
+  // open, closed when the page turned out to be Chat (or said "Loading..."), open again for Work.
+  // So the first time it waits to be told, but not forever, in case the mode can't be read at all.
+  // Later on, say after navigating with a draft typed in, an unknown mode keeps the bar showing.
   function barWanted() {
-    return freshErrorFor(currentUsage())?.code !== 'signed-out' && state.mode !== 'chat';
+    if (freshErrorFor(currentUsage())?.code === 'signed-out') return false;
+    if (state.mode) return state.mode === 'work';
+    return state.modeSeen || Date.now() - startedAt >= MODE_WAIT_MS;
   }
 
   function renderBar(now = Date.now()) {
@@ -483,29 +488,9 @@
     return style.display.includes('flex') && !style.flexDirection.startsWith('column');
   }
 
-  // Adding the bar to the box makes the box taller. Doing that while ChatGPT is animating the box
-  // fights the animation, which has already worked out the box's final size, so the box snapped
-  // instead of growing. So the bar only goes in once the box has held still for a moment.
-  const STILL_MS = 150;
-  // A box in a row layout gets the bar underneath, not inside, so it has to stay that way longer:
-  // Work can show the compact one-line composer for about half a second before it grows.
-  const ROW_STILL_MS = 1200;
-  // After a switch to Work the composer is still compact for a moment and then grows to its Work
-  // layout. The bar waits for that, up to this long, rather than going in first and riding the growth.
-  const MODE_GRACE_MS = 1000;
-  const BAR_ANIM_MS = 260;   // .cgut-bar's transition
-  // A box that never holds still (some animation that doesn't end) gets the bar anyway after this.
-  const STILL_GIVE_UP_MS = 3000;
-
-  // Whether the box has kept the same size and transform for `ms`. ChatGPT animates the box with
-  // transforms, and it reports its final size from the first frame, so both are watched.
-  function holdsStill(node, ms, now) {
-    const look = `${node.offsetWidth}x${node.offsetHeight} ${getComputedStyle(node).transform}`;
-    const still = state.still;
-    if (still?.node !== node) state.still = { node, look, since: now, watchedFrom: now };
-    else if (still.look !== look) Object.assign(still, { look, since: now });
-    return now - state.still.since >= ms || now - state.still.watchedFrom >= STILL_GIVE_UP_MS;
-  }
+  // How long .cgut-bar's transition runs. Not a delay: the clip that hides the content while the
+  // row grows comes off once the bar has finished opening, so this has to match tracker.css.
+  const BAR_ANIM_MS = 260;
 
   let barTimer = null;
 
@@ -564,19 +549,17 @@
     }
   }
 
-  function mountBar(now = Date.now()) {
+  function mountBar() {
     const target = findComposer();
     if (!target) {
       dropBar();
       return false;
     }
     const { node, mode } = target;
-    const rowFlex = mode === 'inside' && isRowFlex(node);
-    const inside = mode === 'inside' && !rowFlex;
+    const inside = mode === 'inside' && !isRowFlex(node);
 
     if (!barWanted()) {
       setBarOpen(false);
-      state.still = null;
       return true;
     }
     const spot = state.barSpot;
@@ -584,19 +567,11 @@
       placeBar(node, inside); // the page may have added something after it
       return true;
     }
-    // The box was replaced or changed layout under the bar: take it out and bring it back in once
-    // the new box holds still.
+    // The box was replaced or changed layout under the bar: take it out and open it again in the
+    // new spot.
     if (state.barOpen) dropBar();
-
-    const still = holdsStill(node, rowFlex ? ROW_STILL_MS : STILL_MS, now);
-    const grown = !!node.closest(SELECTORS.composerGrown);
-    if (!still || (!grown && now - state.modeChangedAt < MODE_GRACE_MS)) {
-      queueMount(); // look again next frame
-      return true;
-    }
     placeBar(node, inside);
     setBarOpen(true);
-    state.still = null;
     return true;
   }
 
@@ -622,6 +597,9 @@
   // The 5-hour and weekly limits only apply to Work. The mode comes from the Chat/Work toggle when
   // it is on screen, else from the input's placeholder ("Work on anything"). The toggle is read by
   // position (first button is Chat) so it works in any language.
+  //
+  // While models and plugins load, ChatGPT's placeholder is "Loading..." in either mode, and an
+  // empty one is a zero-width space (which trim() keeps). Neither says anything about the mode.
   function detectMode() {
     const toggle = document.querySelector(SELECTORS.modeToggle);
     if (toggle && isVisible(toggle)) {
@@ -629,14 +607,14 @@
       if (pressed !== -1) return pressed === 0 ? 'chat' : 'work';
     }
     const input = lastVisible(SELECTORS.composerInput);
-    const placeholder = input ? placeholderOf(input).trim() : '';
-    if (placeholder) return /\bwork\b/i.test(placeholder) ? 'work' : 'chat';
+    const placeholder = input ? placeholderOf(input).replace(/\u200b/g, '').trim() : '';
+    if (placeholder && !/^loading\b/i.test(placeholder)) return /\bwork\b/i.test(placeholder) ? 'work' : 'chat';
     if (new URLSearchParams(location.search).get('surface') === 'work') return 'work';
     return null;
   }
 
   // A rich-text input drops its placeholder once something is typed, so a page keeps the last mode
-  // it saw until it navigates. Until anything is known the bar stays visible.
+  // it saw until it navigates (see barWanted for what an unknown mode does).
   function updateMode() {
     if (location.pathname !== state.modePath) {
       state.modePath = location.pathname;
@@ -645,8 +623,7 @@
     const mode = detectMode() ?? state.mode;
     if (mode === state.mode) return;
     state.mode = mode;
-    state.modeChangedAt = Date.now();
-    state.still = null;
+    if (mode) state.modeSeen = true;
     recheckMountSoon();
   }
 
@@ -676,7 +653,7 @@
 
   function ensureMounted() {
     if (!alive()) return teardown();
-    // The mode first: a switch to Work restarts the wait in mountBar before the bar is shown.
+    // The mode first, so the bar opens or closes in the same frame as a Chat/Work switch.
     updateMode();
     const mounted = { bar: mountBar(), sidebar: mountSidebar() };
 
@@ -742,6 +719,7 @@
       attributeFilter: ['aria-pressed', 'placeholder', 'data-placeholder'],
     });
     tickTimer = setInterval(tick, TICK_MS);
+    setTimeout(queueMount, MODE_WAIT_MS - (Date.now() - startedAt)); // stop waiting for the mode
     document.addEventListener('transitionend', queueMount, true);
     document.addEventListener('animationend', queueMount, true);
 

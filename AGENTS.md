@@ -81,12 +81,15 @@ ChatGPT's markup changes often, and none of it is a public API.
 - **The message box animates.** ChatGPT animates it with framer-motion layout animations: the box
   takes its final size at once and is drawn with transforms in between. While that runs, its
   `border-radius` is written as percentages.
-  - Don't change the box's layout mid-animation. The bar waits for the box to hold still, then
-    opens and closes by animating its own height (see `mountBar` and `setBarOpen`).
+  - The bar opens and closes by animating its own height (see `setBarOpen`), the moment the mode
+    changes. It used to wait for the box to hold still first; on today's composer that only made
+    it feel slow, so the wait was removed.
   - The box is currently a CSS grid, so the bar gives itself a row below the others.
 - **Chat vs Work:** the bar only shows in Work mode. The mode is read from the input's placeholder
-  ("Work on anything"). ChatGPT's toggle is labelled "Select chat surface" and its items carry
-  `data-tpp-toggle-value`; `SELECTORS.modeToggle` doesn't match it today.
+  ("Work on anything"). While the page loads the placeholder is "Loading..." in either mode, which
+  says nothing, and the bar stays closed until the mode is known (see `barWanted`). ChatGPT's toggle
+  is labelled "Select chat surface" and its items carry `data-tpp-toggle-value`;
+  `SELECTORS.modeToggle` doesn't match it today.
 - **Checking a change to the bar for jitter:** record the box's and bar's geometry on every frame
   (sample in a task queued from `requestAnimationFrame`) while switching Chat ↔ Work. PR #5 has
   the method and the before/after numbers. ChatGPT's live bundle under `chatgpt.com/cdn/assets/`
