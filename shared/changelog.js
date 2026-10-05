@@ -1,12 +1,20 @@
-// What changed in each version, as users see it on the What's new page, newest first. Write an
+// What changed in each version, as users see it on the Release notes page, newest first. Write an
 // entry when you bump the version (see RELEASING.md): an update with an entry opens the page in a
 // new tab, and one without updates quietly. Entries for versions newer than the manifest stay
 // hidden until that version ships, so the next release's notes can be written ahead of time.
-// Loaded by the background worker (after usage.js) and by the What's new page.
+// Loaded by the background worker (after usage.js) and by the Release notes page.
 'use strict';
 
 (() => {
   const CHANGELOG = [
+    {
+      version: '0.2.1',
+      date: '2026-10-05',
+      changes: [
+        "What's new is now called Release notes, since it lists every version.",
+        'Older versions fold away behind "Show older versions", so the page stays short.',
+      ],
+    },
     {
       version: '0.2.0',
       date: '2026-10-05',

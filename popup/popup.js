@@ -84,11 +84,10 @@
     setTimeout(() => { $('copy-debug').textContent = 'Copy'; }, 1500);
   }
 
-  // Opens the What's new page in a tab (a plain link would open it inside the popup).
-  $('whats-new').textContent = `What's new in ${chrome.runtime.getManifest().version}`;
-  $('whats-new').addEventListener('click', (e) => {
+  // Opens the Release notes page in a tab (a plain link would open it inside the popup).
+  $('release-notes').addEventListener('click', (e) => {
     e.preventDefault();
-    chrome.tabs.create({ url: chrome.runtime.getURL('whats-new/whats-new.html') });
+    chrome.tabs.create({ url: chrome.runtime.getURL('release-notes/release-notes.html') });
     window.close();
   });
 

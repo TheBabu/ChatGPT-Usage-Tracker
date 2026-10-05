@@ -16,13 +16,13 @@ Chrome 111. The only site it talks to is chatgpt.com.
 | Path | What it does |
 |---|---|
 | `manifest.json` | Permissions are `storage` plus the chatgpt.com host, and nothing else. |
-| `background.js` | Service worker. Owns the shared state in `chrome.storage.local` (usage, last error, monthly credit ledger, debug log) and serializes writes to it. Fetches only when the popup asks and no chatgpt.com tab can. Opens the What's new page after an update. |
+| `background.js` | Service worker. Owns the shared state in `chrome.storage.local` (usage, last error, monthly credit ledger, debug log) and serializes writes to it. Fetches only when the popup asks and no chatgpt.com tab can. Opens the Release notes page after an update. |
 | `content/tracker.js`, `tracker.css` | Runs on chatgpt.com: polls usage, notices replies, draws the bar in the message box and the sidebar section. Everything that depends on ChatGPT's markup is in `SELECTORS` at the top. |
 | `shared/usage.js` | Fetching and normalizing usage, and formatting. Used by the worker, the content script and the popup. |
 | `shared/ui.js`, `ui.css` | Progress bars, rows and the tooltip shared by the sidebar and the popup. |
-| `shared/changelog.js` | Release notes, written for users, shown on the What's new page. |
+| `shared/changelog.js` | Release notes, written for users, shown on the Release notes page. |
 | `popup/` | The toolbar popup, including a Debug section with the log and the last raw response. |
-| `whats-new/` | The What's new page. |
+| `release-notes/` | The Release notes page. |
 | `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
 | `tests/unit/` | Node's built-in test runner, no dependencies. |
 | `tests/e2e/` | The extension in a real Chromium, driven by Playwright. |
@@ -38,7 +38,7 @@ Node 22 or newer.
 
 - `npm test`: unit tests. Needs no `npm install`.
 - `npm run build`: packs `dist/simple-tracker-for-chatgpt-v<version>.zip`.
-- `npm run test:e2e`: the What's new flow end to end in Chromium (about 25 s), with screenshots of
+- `npm run test:e2e`: the Release notes flow end to end in Chromium (about 25 s), with screenshots of
   the page in `test-results/`. Run `npm install` and `npx playwright install chromium` once first.
 - By hand: `chrome://extensions` → Developer mode → Load unpacked → the repo root. After an edit,
   press Reload on the extension, then reload the chatgpt.com tab for content script changes.
@@ -46,7 +46,7 @@ Node 22 or newer.
 Before you call a change done:
 
 1. `npm test` and `npm run build` pass.
-2. You ran `npm run test:e2e` if you touched `background.js`, `popup/`, `whats-new/` or
+2. You ran `npm run test:e2e` if you touched `background.js`, `popup/`, `release-notes/` or
    `shared/changelog.js`.
 3. For anything you couldn't check (most things on chatgpt.com need a signed-in account), say
    what wasn't tested.
@@ -107,7 +107,7 @@ ChatGPT's markup changes often, and none of it is a public API.
 - **Version bumps:** pushing a new `version` in `manifest.json` to `main` publishes a GitHub
   release automatically. Don't change the version unless the maintainer asks.
 - **Release notes:** for a change users would notice, add to the entry for the next version at
-  the top of `shared/changelog.js`, written for users. An update with notes opens the What's new
+  the top of `shared/changelog.js`, written for users. An update with notes opens the Release notes
   page; one without updates quietly. See `RELEASING.md`.
 
 ## Privacy

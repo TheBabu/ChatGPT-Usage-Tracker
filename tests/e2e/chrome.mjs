@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const PACKAGE = ['manifest.json', 'background.js', 'content', 'shared', 'popup', 'whats-new', 'icons'];
+const PACKAGE = ['manifest.json', 'background.js', 'content', 'shared', 'popup', 'release-notes', 'icons'];
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

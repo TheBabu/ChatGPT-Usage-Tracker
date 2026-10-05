@@ -110,10 +110,15 @@ button:disabled {
   }
 }
 
-.popup-link {
-  display: block;
-  width: fit-content;
+.popup-extras {
+  position: relative;
   margin-top: 10px;
+}
+
+.popup-link {
+  position: absolute;
+  top: 0;
+  right: 0;
   color: var(--cgut-text-3);
   font-size: 12px;
   text-decoration: none;
@@ -125,7 +130,6 @@ button:disabled {
 }
 
 .popup-debug {
-  margin-top: 6px;
   color: var(--cgut-text-2);
   font-size: 12px;
 }

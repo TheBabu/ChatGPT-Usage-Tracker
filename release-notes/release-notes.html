@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>What's new</title>
+  <title>Release notes</title>
   <link rel="icon" href="../icons/icon32.png">
-  <link rel="stylesheet" href="whats-new.css">
+  <link rel="stylesheet" href="release-notes.css">
 </head>
 <body>
   <main class="page">
@@ -13,7 +13,7 @@
       <img src="../icons/icon48.png" width="40" height="40" alt="">
       <div>
         <p id="product" class="product"></p>
-        <h1>What's new</h1>
+        <h1>Release notes</h1>
       </div>
     </header>
 
@@ -23,6 +23,10 @@
     <section id="earlier" class="earlier" hidden>
       <h2>Earlier updates</h2>
       <div id="earlier-list"></div>
+      <details id="older" class="older" hidden>
+        <summary id="older-summary"></summary>
+        <div id="older-list"></div>
+      </details>
     </section>
 
     <footer class="page-footer">
@@ -30,11 +34,11 @@
         <input id="on-update" type="checkbox" checked>
         Open this page after updates
       </label>
-      <a href="https://github.com/TheBabu/Simple-Usage-Tracker-for-ChatGPT/releases" target="_blank" rel="noopener">All releases on GitHub</a>
+      <a href="https://github.com/TheBabu/Simple-Usage-Tracker-for-ChatGPT/releases" target="_blank" rel="noopener">GitHub Releases</a>
     </footer>
   </main>
 
   <script src="../shared/changelog.js"></script>
-  <script src="whats-new.js"></script>
+  <script src="release-notes.js"></script>
 </body>
 </html>

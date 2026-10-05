@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const INCLUDE = ['manifest.json', 'background.js', 'content', 'shared', 'popup', 'whats-new', 'icons'];
+const INCLUDE = ['manifest.json', 'background.js', 'content', 'shared', 'popup', 'release-notes', 'icons'];
 
 const manifest = JSON.parse(readFileSync(join(ROOT, 'manifest.json'), 'utf8'));
 
@@ -37,7 +37,7 @@ for (const file of referenced) {
 // A version without release notes updates quietly; that's allowed, but easy to do by accident.
 const changelog = readFileSync(join(ROOT, 'shared/changelog.js'), 'utf8');
 if (!changelog.includes(`version: '${manifest.version}'`)) {
-  console.warn(`build: no entry for ${manifest.version} in shared/changelog.js, so this update won't open What's new`);
+  console.warn(`build: no entry for ${manifest.version} in shared/changelog.js, so this update won't open the Release notes`);
 }
 
 function listFiles(path) {

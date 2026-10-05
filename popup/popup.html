@@ -24,21 +24,24 @@
     </button>
   </footer>
 
-  <a id="whats-new" class="popup-link" href="../whats-new/whats-new.html">What's new</a>
+  <!-- The Release notes link sits at the right end of the Debug line, and stays there when Debug opens. -->
+  <div class="popup-extras">
+    <a id="release-notes" class="popup-link" href="../release-notes/release-notes.html">Release notes</a>
 
-  <details id="debug" class="popup-debug">
-    <summary>Debug</summary>
-    <div class="debug-actions">
-      <button id="copy-debug" type="button">Copy</button>
-      <button id="clear-log" type="button">Clear log</button>
-    </div>
-    <h2>Status</h2>
-    <pre id="debug-status"></pre>
-    <h2>Log</h2>
-    <pre id="debug-log"></pre>
-    <h2>Last response</h2>
-    <pre id="debug-raw"></pre>
-  </details>
+    <details id="debug" class="popup-debug">
+      <summary>Debug</summary>
+      <div class="debug-actions">
+        <button id="copy-debug" type="button">Copy</button>
+        <button id="clear-log" type="button">Clear log</button>
+      </div>
+      <h2>Status</h2>
+      <pre id="debug-status"></pre>
+      <h2>Log</h2>
+      <pre id="debug-log"></pre>
+      <h2>Last response</h2>
+      <pre id="debug-raw"></pre>
+    </details>
+  </div>
 
   <script src="../shared/usage.js"></script>
   <script src="../shared/ui.js"></script>

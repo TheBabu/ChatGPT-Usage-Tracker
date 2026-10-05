@@ -1,7 +1,7 @@
 # Releasing
 
 1. Add an entry for the new version at the top of `shared/changelog.js`, written for users. After
-   the update, the extension opens it in a What's new tab (behind the current one), above the
+   the update, the extension opens it in a Release notes tab (behind the current one), above the
    notes for earlier versions. A version without an entry updates quietly, which suits a small fix.
    Entries for versions newer than the manifest stay hidden, so notes can be written ahead.
 2. Bump `version` in `manifest.json` and push it to `main`.

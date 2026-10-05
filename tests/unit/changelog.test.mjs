@@ -1,4 +1,4 @@
-// shared/changelog.js: the release notes behind the What's new page, and when an update shows them.
+// shared/changelog.js: the release notes behind the Release notes page, and when an update shows them.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

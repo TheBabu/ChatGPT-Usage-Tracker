@@ -1,4 +1,4 @@
-/* The What's new page. Same colours as the popup, light and dark. */
+/* The Release notes page. Same colours as the popup, light and dark. */
 
 :root {
   --fg: #0d0d0d;
@@ -145,6 +145,18 @@ h1 {
 
 .entry-earlier .entry-title {
   font-size: 16px;
+}
+
+/* Versions past the first few, folded away so the footer stays close. */
+.older summary {
+  padding: 16px 0 0;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.older[open] summary {
+  display: none;
 }
 
 .entry-empty {

@@ -1,4 +1,4 @@
-// The What's new page: the latest release's notes up top, earlier releases below. The background
+// The Release notes page: the latest release's notes up top, earlier releases below. The background
 // worker opens it after an update (with ?from=<previous version>), and the toolbar popup links to it.
 // Depends on shared/changelog.js.
 'use strict';
@@ -8,6 +8,9 @@
   const $ = (id) => document.getElementById(id);
   const manifest = chrome.runtime.getManifest();
   const from = new URLSearchParams(location.search).get('from');
+  // Earlier versions shown before the rest fold away, so the footer stays near the top however
+  // many releases there are.
+  const EARLIER_SHOWN = 3;
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -37,7 +40,7 @@
   }
 
   function render() {
-    document.title = `What's new · ${manifest.name}`;
+    document.title = `Release notes · ${manifest.name}`;
     $('product').textContent = manifest.name;
 
     if (from && CGUT.compareVersions(from, manifest.version) < 0) {
@@ -52,18 +55,27 @@
     }
     $('latest').append(renderEntry(latest, { className: 'entry-latest', headingTag: 'h2' }));
 
+    // Versions the update brought in are never folded away, even when it skipped several. They are
+    // the newest ones, so they come first.
+    const isNew = (entry) => !!from && CGUT.compareVersions(entry.version, from) > 0;
+    const shown = Math.max(EARLIER_SHOWN, earlier.filter(isNew).length);
+    const older = earlier.slice(shown);
     $('earlier').hidden = !earlier.length;
-    for (const entry of earlier) {
-      const isNew = !!from && CGUT.compareVersions(entry.version, from) > 0;
-      $('earlier-list').append(renderEntry(entry, { className: 'entry-earlier', headingTag: 'h3', isNew }));
+    for (const entry of earlier.slice(0, shown)) {
+      $('earlier-list').append(renderEntry(entry, { className: 'entry-earlier', headingTag: 'h3', isNew: isNew(entry) }));
+    }
+    $('older').hidden = !older.length;
+    $('older-summary').textContent = `Show ${older.length} older ${older.length === 1 ? 'version' : 'versions'}`;
+    for (const entry of older) {
+      $('older-list').append(renderEntry(entry, { className: 'entry-earlier', headingTag: 'h3' }));
     }
   }
 
   const toggle = $('on-update');
-  chrome.storage.local.get('whatsNewOnUpdate').then(({ whatsNewOnUpdate }) => {
-    toggle.checked = whatsNewOnUpdate !== false;
+  chrome.storage.local.get('releaseNotesOnUpdate').then(({ releaseNotesOnUpdate }) => {
+    toggle.checked = releaseNotesOnUpdate !== false;
   });
-  toggle.addEventListener('change', () => chrome.storage.local.set({ whatsNewOnUpdate: toggle.checked }));
+  toggle.addEventListener('change', () => chrome.storage.local.set({ releaseNotesOnUpdate: toggle.checked }));
 
   render();
 })();
