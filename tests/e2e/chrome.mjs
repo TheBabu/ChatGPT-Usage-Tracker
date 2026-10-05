@@ -82,28 +82,13 @@ export async function launchChrome() {
     throw new Error(`page ${targetId} never finished loading`);
   }
 
-  // Answers every request to chatgpt.com from `routes` (path → { type, body }), and anything else
-  // there with a 404, so the content script runs against a stand-in page without signing in.
-  async function serveChatGPT(routes) {
-    cdp.on('Fetch.requestPaused', ({ requestId, request }) => {
-      const route = routes[new URL(request.url).pathname];
-      const body = Buffer.from(route ? route.body : '').toString('base64');
-      const headers = route ? [{ name: 'Content-Type', value: route.type }] : [];
-      cdp.send('Fetch.fulfillRequest', { requestId, responseCode: route ? 200 : 404, responseHeaders: headers, body }).catch(() => {});
-    });
-    await cdp.send('Fetch.enable', { patterns: [{ urlPattern: 'https://chatgpt.com/*' }] });
-  }
-
   return {
     session,
     evaluate,
     ready,
-    serveChatGPT,
     loadUnpacked: async (dir) => (await cdp.send('Extensions.loadUnpacked', { path: dir })).id,
     pages: async () => (await cdp.send('Target.getTargets')).targetInfos.filter((t) => t.type === 'page'),
     open: async (url, options = {}) => ready((await cdp.send('Target.createTarget', { url, ...options })).targetId),
-    // For a web page, which has no chrome.* APIs for `ready` to wait on.
-    openSite: async (url) => (await cdp.send('Target.createTarget', { url })).targetId,
     openWindow: async () => (await cdp.send('Target.createTarget', { url: 'about:blank', newWindow: true })).targetId,
     close: async (targetId) => cdp.send('Target.closeTarget', { targetId }),
     screenshot: async (targetId, { width, height, colorScheme }) => {

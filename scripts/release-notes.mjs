@@ -7,30 +7,22 @@
 // entry for this one.
 
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import '../shared/changelog.js';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const CGUT = globalThis.CGUT;
+const { version } = JSON.parse(readFileSync(new URL('../manifest.json', import.meta.url), 'utf8'));
+const previous = process.argv[2]?.replace(/^v/, '');
+
+const entries = previous
+  ? CGUT.changelogSince(previous, version)
+  : CGUT.releasedChangelog(version).filter((entry) => CGUT.compareVersions(entry.version, version) === 0);
 
 // One entry reads as its headline and its changes. With several, each gets a heading of its own.
-export function releaseNotes(entries) {
-  const several = entries.length > 1;
-  return entries.map((entry) => {
-    const heading = several ? `Version ${entry.version}${entry.title ? `: ${entry.title}` : ''}` : entry.title;
-    const changes = entry.changes.map((change) => `- ${change}`).join('\n');
-    return heading ? `### ${heading}\n\n${changes}` : changes;
-  }).join('\n\n');
-}
+const several = entries.length > 1;
+const notes = entries.map((entry) => {
+  const heading = several ? `Version ${entry.version}${entry.title ? `: ${entry.title}` : ''}` : entry.title;
+  const changes = entry.changes.map((change) => `- ${change}`).join('\n');
+  return heading ? `### ${heading}\n\n${changes}` : changes;
+}).join('\n\n');
 
-export function entriesFor(version, previous) {
-  if (previous) return CGUT.changelogSince(previous, version);
-  return CGUT.releasedChangelog(version).filter((entry) => CGUT.compareVersions(entry.version, version) === 0);
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { version } = JSON.parse(readFileSync(join(ROOT, 'manifest.json'), 'utf8'));
-  const notes = releaseNotes(entriesFor(version, process.argv[2]?.replace(/^v/, '')));
-  if (notes) console.log(notes);
-}
+if (notes) console.log(notes);

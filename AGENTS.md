@@ -26,7 +26,7 @@ Chrome 111. The only site it talks to is chatgpt.com.
 | `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
 | `scripts/release-notes.mjs` | Writes the GitHub release notes from `shared/changelog.js`. |
 | `tests/unit/` | Node's built-in test runner, no dependencies. |
-| `tests/e2e/` | The extension in a real Chromium, driven by Playwright, with a stand-in chatgpt.com where a test needs one. |
+| `tests/e2e/` | The extension in a real Chromium, driven by Playwright. |
 | `.github/workflows/release.yml` | Unit tests and build on every PR; a release when `main` gets a new version, with its notes from `shared/changelog.js`. |
 
 The scripts share code through one global, `globalThis.CGUT`, so load order matters: `usage.js`
@@ -39,18 +39,16 @@ Node 22 or newer.
 
 - `npm test`: unit tests. Needs no `npm install`.
 - `npm run build`: packs `dist/simple-tracker-for-chatgpt-v<version>.zip`.
-- `npm run test:e2e`: the Release notes flow and the popup's bar option end to end in Chromium
-  (about 40 s), with screenshots of the page and the popup in `test-results/`. Run `npm install`
-  and `npx playwright install chromium` once first.
+- `npm run test:e2e`: the Release notes flow end to end in Chromium (about 25 s), with screenshots of
+  the page in `test-results/`. Run `npm install` and `npx playwright install chromium` once first.
 - By hand: `chrome://extensions` → Developer mode → Load unpacked → the repo root. After an edit,
   press Reload on the extension, then reload the chatgpt.com tab for content script changes.
 
 Before you call a change done:
 
 1. `npm test` and `npm run build` pass.
-2. You ran `npm run test:e2e` if you touched `background.js`, `popup/`, `release-notes/`,
-   `shared/changelog.js` or `content/tracker.js` (only the option is covered there; the bar against
-   the real chatgpt.com still needs a look by hand).
+2. You ran `npm run test:e2e` if you touched `background.js`, `popup/`, `release-notes/` or
+   `shared/changelog.js`.
 3. For anything you couldn't check (most things on chatgpt.com need a signed-in account), say
    what wasn't tested.
 
