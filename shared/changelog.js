@@ -13,6 +13,7 @@
       changes: [
         "What's new is now called Release notes, since it lists every version.",
         'Older versions fold away behind "Show older versions", so the page stays short.',
+        'In the toolbar popup, the Release notes link sits beside Debug.',
       ],
     },
     {
