@@ -1,0 +1,16 @@
+{
+  "name": "simple-usage-tracker-for-chatgpt",
+  "private": true,
+  "description": "Chrome extension that shows ChatGPT's 5-hour, weekly and credit usage in the chat window.",
+  "scripts": {
+    "test": "node --test \"tests/unit/*.test.mjs\"",
+    "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.test.mjs\"",
+    "build": "node scripts/build.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

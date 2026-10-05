@@ -1,0 +1,115 @@
+# AGENTS.md
+
+Instructions for coding agents (Codex, Claude Code, Cursor, Copilot, Gemini CLI and others) and for
+anyone else working on this repo. This is the one copy; tool-specific files such as `CLAUDE.md`
+only point here.
+
+## What this is
+
+A Chrome extension (Manifest V3) that shows ChatGPT's 5-hour, weekly and credit usage: in a bar
+inside the message box on chatgpt.com, in a sidebar section, and in the toolbar popup. It is plain
+JavaScript that Chrome loads as is: no bundler, no framework, no runtime dependencies. Minimum
+Chrome 111. The only site it talks to is chatgpt.com.
+
+## Layout
+
+| Path | What it does |
+|---|---|
+| `manifest.json` | Permissions are `storage` plus the chatgpt.com host, and nothing else. |
+| `background.js` | Service worker. Owns the shared state in `chrome.storage.local` (usage, last error, monthly credit ledger, debug log) and serializes writes to it. Fetches only when the popup asks and no chatgpt.com tab can. Opens the What's new page after an update. |
+| `content/tracker.js`, `tracker.css` | Runs on chatgpt.com: polls usage, notices replies, draws the bar in the message box and the sidebar section. Everything that depends on ChatGPT's markup is in `SELECTORS` at the top. |
+| `shared/usage.js` | Fetching and normalizing usage, and formatting. Used by the worker, the content script and the popup. |
+| `shared/ui.js`, `ui.css` | Progress bars, rows and the tooltip shared by the sidebar and the popup. |
+| `shared/changelog.js` | Release notes, written for users, shown on the What's new page. |
+| `popup/` | The toolbar popup, including a Debug section with the log and the last raw response. |
+| `whats-new/` | The What's new page. |
+| `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
+| `tests/unit/` | Node's built-in test runner, no dependencies. |
+| `tests/e2e/` | The extension in a real Chromium, driven by Playwright. |
+| `.github/workflows/release.yml` | Unit tests and build on every PR; a release when `main` gets a new version. |
+
+The scripts share code through one global, `globalThis.CGUT`, so load order matters: `usage.js`
+first, then `ui.js` or `changelog.js` add to it. The shipped code uses no ES modules, because
+content scripts can't.
+
+## Commands
+
+Node 22 or newer.
+
+- `npm test`: unit tests. Needs no `npm install`.
+- `npm run build`: packs `dist/simple-tracker-for-chatgpt-v<version>.zip`.
+- `npm run test:e2e`: the What's new flow end to end in Chromium (about 25 s), with screenshots of
+  the page in `test-results/`. Run `npm install` and `npx playwright install chromium` once first.
+- By hand: `chrome://extensions` → Developer mode → Load unpacked → the repo root. After an edit,
+  press Reload on the extension, then reload the chatgpt.com tab for content script changes.
+
+Before you call a change done:
+
+1. `npm test` and `npm run build` pass.
+2. You ran `npm run test:e2e` if you touched `background.js`, `popup/`, `whats-new/` or
+   `shared/changelog.js`.
+3. For anything you couldn't check (most things on chatgpt.com need a signed-in account), say
+   what wasn't tested.
+
+## Code style
+
+Match the code around you:
+
+- **Shape:** each script is `'use strict'` plus one IIFE. Two-space indent, single quotes,
+  semicolons, `const`/`let`, arrow functions for callbacks. `.editorconfig` has the formatting.
+- **Comments:** plain sentences about *why*: what ChatGPT does, timing, edge cases. No JSDoc.
+  Update a comment when the behaviour it describes changes.
+- **Dependencies and permissions:** add no dependency or build step to the shipped code. Add a
+  permission only with a strong reason, because each one shows in Chrome's install prompt and the
+  store review.
+- **User-facing text:** short and plain, in sentence case ("Resets in 4h 28m").
+- **Colours:** use ChatGPT's own theme variables with fallbacks (see `shared/ui.css`), so light and
+  dark mode follow the page.
+
+## Working against chatgpt.com
+
+ChatGPT's markup changes often, and none of it is a public API.
+
+- **Selectors:** all of them live in `SELECTORS` in `content/tracker.js`. When the bar or sidebar
+  section stops appearing, start there. Find elements by what they do rather than by class name,
+  since Tailwind class names churn. For example, the message box is "the nearest rounded, painted
+  ancestor of the input".
+- **Usage data:** it comes from `GET /backend-api/wham/usage`, using the page's own session token.
+  Never read or send conversation content.
+- **Replies:** don't wrap or patch the page's `fetch`/XHR; that was tried and removed. Replies are
+  detected from the stop button and from resource timing.
+- **The message box animates.** ChatGPT animates it with framer-motion layout animations: the box
+  takes its final size at once and is drawn with transforms in between. While that runs, its
+  `border-radius` is written as percentages.
+  - Don't change the box's layout mid-animation. The bar waits for the box to hold still, then
+    opens and closes by animating its own height (see `mountBar` and `setBarOpen`).
+  - The box is currently a CSS grid, so the bar gives itself a row below the others.
+- **Chat vs Work:** the bar only shows in Work mode. The mode is read from the input's placeholder
+  ("Work on anything"). ChatGPT's toggle is labelled "Select chat surface" and its items carry
+  `data-tpp-toggle-value`; `SELECTORS.modeToggle` doesn't match it today.
+- **Checking a change to the bar for jitter:** record the box's and bar's geometry on every frame
+  (sample in a task queued from `requestAnimationFrame`) while switching Chat ↔ Work. PR #5 has
+  the method and the before/after numbers. ChatGPT's live bundle under `chatgpt.com/cdn/assets/`
+  (listed in the manifest the `/gpts` page loads) is the reference for its markup and animations.
+- **Signing in:** agent sandboxes usually can't sign in to ChatGPT. Mock `/api/auth/session` and
+  `/backend-api/wham/usage` instead, and say what wasn't tested live.
+
+## Releases
+
+- **Version bumps:** pushing a new `version` in `manifest.json` to `main` publishes a GitHub
+  release automatically. Don't change the version unless the maintainer asks.
+- **Release notes:** for a change users would notice, add to the entry for the next version at
+  the top of `shared/changelog.js`, written for users. An update with notes opens the What's new
+  page; one without updates quietly. See `RELEASING.md`.
+
+## Privacy
+
+The Privacy Policy in `README.md` is a promise to users. Question anything that stores new data,
+contacts a new host or reads more of the page, and if it goes ahead, update the policy in the same
+change. No analytics and no third-party requests.
+
+## Git
+
+- **Commits:** a short imperative summary ("Stop the composer bar jittering when switching Chat to
+  Work"), then a body saying what was wrong and why the change fixes it.
+- **Branches:** work on a branch and open a pull request into `main`. CI must pass.

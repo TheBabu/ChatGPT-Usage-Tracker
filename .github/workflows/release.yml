@@ -1,5 +1,5 @@
-# Builds the extension zip on every pull request, and publishes a GitHub release whenever a push to
-# main changes the version in manifest.json. See RELEASING.md.
+# Tests and builds the extension zip on every pull request, and publishes a GitHub release whenever a
+# push to main changes the version in manifest.json. See RELEASING.md.
 name: Release
 
 on:
@@ -35,6 +35,11 @@ jobs:
           else
             echo "new=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # The unit tests need nothing installed. The end-to-end tests (npm run test:e2e) need a
+      # browser and run locally.
+      - name: Test
+        run: npm test
 
       - name: Build
         run: node scripts/build.mjs
