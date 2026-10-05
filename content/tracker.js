@@ -28,6 +28,8 @@
     composerInput: '[data-composer-input], #prompt-textarea, main [contenteditable="true"], main textarea',
     // How far up from the input that box can be.
     composerRoot: '[data-composer-surface-variant], form',
+    // Set once the composer has grown to its two-row layout (Work's, once its buttons load).
+    composerGrown: 'form[data-expanded]',
     // Where the bar goes when no box can be found.
     composer: [
       { selector: '[data-composer-surface-variant]', mode: 'inside' },
@@ -70,9 +72,12 @@
     mountWarned: { bar: false, sidebar: false },
     mode: null,            // 'work' | 'chat' | null (not known yet) for the current page
     modePath: null,
+    modeChangedAt: 0,
     composerBox: null,     // { input, box } last found by findComposerBox
     barTarget: null,
-    rowBox: null,          // { node, since } while the composer box lays out in one row
+    barOpen: false,        // shown, or opening
+    barSpot: null,         // { node, inside } where the bar was last put
+    still: null,           // { node, look, since, watchedFrom } while waiting for the box to hold still
   };
 
   // ---------- Extension plumbing ----------
@@ -244,9 +249,14 @@
 
   // ---------- Composer bar ----------
 
+  // The bar opens and closes by growing its one grid row from nothing (see tracker.css), so the
+  // composer box grows and shrinks smoothly instead of jumping by the bar's height.
   function createBar() {
-    const root = ui.el('div', 'cgut-root cgut-bar');
+    const root = ui.el('div', 'cgut-root cgut-bar cgut-bar-closed');
     root.id = 'cgut-bar';
+    root.hidden = true;
+    const clip = ui.el('div', 'cgut-bar-clip');
+    const row = ui.el('div', 'cgut-bar-row');
     const left = ui.el('div', 'cgut-bar-left');
     const label = ui.el('span', 'cgut-bar-label');
     const pct = ui.el('span', 'cgut-pct');
@@ -261,7 +271,9 @@
     creditsNote.hidden = true;
     right.append(spend, creditsNote, reset);
 
-    root.append(left, right);
+    row.append(left, right);
+    clip.append(row);
+    root.append(clip);
     return { root, label, pct, progress, spend, creditsNote, reset };
   }
 
@@ -273,14 +285,21 @@
     return `${label}: ${CGUT.formatPct(win.pct)} used${resets ? ` · ${resets}` : ''}`;
   }
 
+  // The last error, if nothing has loaded since.
+  function freshErrorFor(usage) {
+    const { error } = state;
+    return error && (!usage || error.at > usage.fetchedAt) ? error : null;
+  }
+
+  // Logged out there is nothing to show, and the composer is ChatGPT's sign-up pitch anyway. In
+  // Chat mode the limits don't apply, so the bar would only be noise.
+  function barWanted() {
+    return freshErrorFor(currentUsage())?.code !== 'signed-out' && state.mode !== 'chat';
+  }
+
   function renderBar(now = Date.now()) {
     const usage = currentUsage();
-    const { error } = state;
-    const freshError = error && (!usage || error.at > usage.fetchedAt) ? error : null;
-
-    // Logged out there is nothing to show, and the composer is ChatGPT's sign-up pitch anyway. In
-    // Chat mode the limits don't apply, so the bar would only be noise.
-    bar.root.hidden = freshError?.code === 'signed-out' || state.mode === 'chat';
+    const freshError = freshErrorFor(usage);
     bar.root.classList.toggle('cgut-stale', !!usage && !!freshError);
 
     const main = usage?.session || usage?.weekly || null;
@@ -396,9 +415,19 @@
     return nodes[nodes.length - 1] || null;
   }
 
+  // While ChatGPT animates the box's size (framer-motion layout animations, e.g. on a Chat/Work
+  // switch), the radius is rewritten as percentages of the box ("3.6% 47.8%"), so those are turned
+  // back into pixels. Read as plain numbers they looked like no rounding at all, and the bar was
+  // thrown out under the box until the animation ended.
+  function cornerRadius(node, style) {
+    const [x, y = x] = style.borderTopLeftRadius.split(' ');
+    const px = (value, size) => (value.endsWith('%') ? (parseFloat(value) / 100) * size : parseFloat(value)) || 0;
+    return Math.min(px(x, node.offsetWidth || 0), px(y, node.offsetHeight || 0));
+  }
+
   function paintsRoundedBox(node) {
     const style = getComputedStyle(node);
-    if ((parseFloat(style.borderTopLeftRadius) || 0) < 12) return false;
+    if (cornerRadius(node, style) < 12) return false;
     const bg = style.backgroundColor;
     const transparent = bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)' || /\/\s*0\)$/.test(bg);
     return !transparent || style.backgroundImage !== 'none' || style.boxShadow !== 'none';
@@ -454,41 +483,120 @@
     return style.display.includes('flex') && !style.flexDirection.startsWith('column');
   }
 
-  // Switching to Work shows the compact one-line composer for about half a second before it grows,
-  // and a bar placed underneath it for that moment then jumps inside. So a box in a row layout only
-  // gets the bar underneath once it has stayed that way; until then the bar is left out.
-  const ROW_SETTLE_MS = 1200;
-  function rowLayoutSettled(node, now = Date.now()) {
-    if (state.rowBox?.node !== node) {
-      state.rowBox = { node, since: now };
-      setTimeout(queueMount, ROW_SETTLE_MS + 50);
-    }
-    return now - state.rowBox.since >= ROW_SETTLE_MS;
+  // Adding the bar to the box makes the box taller. Doing that while ChatGPT is animating the box
+  // fights the animation, which has already worked out the box's final size, so the box snapped
+  // instead of growing. So the bar only goes in once the box has held still for a moment.
+  const STILL_MS = 150;
+  // A box in a row layout gets the bar underneath, not inside, so it has to stay that way longer:
+  // Work can show the compact one-line composer for about half a second before it grows.
+  const ROW_STILL_MS = 1200;
+  // After a switch to Work the composer is still compact for a moment and then grows to its Work
+  // layout. The bar waits for that, up to this long, rather than going in first and riding the growth.
+  const MODE_GRACE_MS = 1000;
+  const BAR_ANIM_MS = 260;   // .cgut-bar's transition
+  // A box that never holds still (some animation that doesn't end) gets the bar anyway after this.
+  const STILL_GIVE_UP_MS = 3000;
+
+  // Whether the box has kept the same size and transform for `ms`. ChatGPT animates the box with
+  // transforms, and it reports its final size from the first frame, so both are watched.
+  function holdsStill(node, ms, now) {
+    const look = `${node.offsetWidth}x${node.offsetHeight} ${getComputedStyle(node).transform}`;
+    const still = state.still;
+    if (still?.node !== node) state.still = { node, look, since: now, watchedFrom: now };
+    else if (still.look !== look) Object.assign(still, { look, since: now });
+    return now - state.still.since >= ms || now - state.still.watchedFrom >= STILL_GIVE_UP_MS;
   }
 
-  function mountBar() {
-    const target = findComposer();
+  let barTimer = null;
+
+  function setBarOpen(open) {
     const el = bar.root;
-    if (!target) {
-      el.remove();
-      return false;
+    if (state.barOpen === open) return;
+    state.barOpen = open;
+    clearTimeout(barTimer);
+    el.classList.add('cgut-bar-moving');
+    if (open) {
+      el.hidden = false;
+      el.getBoundingClientRect(); // lays it out closed first, so it opens from nothing
     }
-    const { node, mode } = target;
-    const rowFlex = mode === 'inside' && isRowFlex(node);
-    if (!rowFlex) state.rowBox = null;
-    else if (!rowLayoutSettled(node)) {
-      el.remove();
-      return true;
-    }
-    const inside = mode === 'inside' && !rowFlex;
+    el.classList.toggle('cgut-bar-closed', !open);
+    barTimer = setTimeout(() => {
+      el.classList.remove('cgut-bar-moving');
+      if (!state.barOpen) el.hidden = true;
+    }, BAR_ANIM_MS + 30);
+  }
+
+  function dropBar() {
+    clearTimeout(barTimer);
+    bar.root.remove();
+    bar.root.hidden = true;
+    bar.root.classList.add('cgut-bar-closed');
+    bar.root.classList.remove('cgut-bar-moving');
+    state.barOpen = false;
+    state.barSpot = null;
+  }
+
+  // In a grid the bar would take the first free cell, which can be an empty row at the top of the
+  // box. It gets a row of its own below the rows already there instead (not counting its own, when
+  // it is still there closing).
+  function gridRowAfterLast(node) {
+    const rows = getComputedStyle(node).gridTemplateRows.replace(/\[[^\]]*\]/g, ' ').trim();
+    const count = rows && rows !== 'none' ? rows.split(/\s+/).length : 0;
+    const own = bar.root.parentElement === node && !bar.root.hidden ? 1 : 0;
+    return Math.max(1, count - own + 1);
+  }
+
+  function placeBar(node, inside) {
+    const el = bar.root;
     const placed = inside ? el.parentElement === node && node.lastElementChild === el : node.nextElementSibling === el;
-    if (placed) return true;
-    if (inside) node.append(el);
-    else node.after(el);
+    if (!placed) {
+      if (inside) node.append(el);
+      else node.after(el);
+    }
+    if (!state.barOpen) {
+      const grid = inside && getComputedStyle(node).display.includes('grid');
+      el.style.gridRowStart = grid ? String(gridRowAfterLast(node)) : '';
+    }
+    state.barSpot = { node, inside };
     if (node !== state.barTarget) {
       state.barTarget = node;
       log(`Composer bar placed ${inside ? 'inside' : 'after'} ${describeNode(node)}`);
     }
+  }
+
+  function mountBar(now = Date.now()) {
+    const target = findComposer();
+    if (!target) {
+      dropBar();
+      return false;
+    }
+    const { node, mode } = target;
+    const rowFlex = mode === 'inside' && isRowFlex(node);
+    const inside = mode === 'inside' && !rowFlex;
+
+    if (!barWanted()) {
+      setBarOpen(false);
+      state.still = null;
+      return true;
+    }
+    const spot = state.barSpot;
+    if (state.barOpen && bar.root.isConnected && spot?.node === node && spot.inside === inside) {
+      placeBar(node, inside); // the page may have added something after it
+      return true;
+    }
+    // The box was replaced or changed layout under the bar: take it out and bring it back in once
+    // the new box holds still.
+    if (state.barOpen) dropBar();
+
+    const still = holdsStill(node, rowFlex ? ROW_STILL_MS : STILL_MS, now);
+    const grown = !!node.closest(SELECTORS.composerGrown);
+    if (!still || (!grown && now - state.modeChangedAt < MODE_GRACE_MS)) {
+      queueMount(); // look again next frame
+      return true;
+    }
+    placeBar(node, inside);
+    setBarOpen(true);
+    state.still = null;
     return true;
   }
 
@@ -512,7 +620,7 @@
   }
 
   // The 5-hour and weekly limits only apply to Work. The mode comes from the Chat/Work toggle when
-  // it is on screen, else from the input's placeholder ("Work with ChatGPT"). The toggle is read by
+  // it is on screen, else from the input's placeholder ("Work on anything"). The toggle is read by
   // position (first button is Chat) so it works in any language.
   function detectMode() {
     const toggle = document.querySelector(SELECTORS.modeToggle);
@@ -537,8 +645,8 @@
     const mode = detectMode() ?? state.mode;
     if (mode === state.mode) return;
     state.mode = mode;
-    state.rowBox = null;
-    renderBar();
+    state.modeChangedAt = Date.now();
+    state.still = null;
     recheckMountSoon();
   }
 
@@ -646,6 +754,7 @@
       if (changes.creditLedger) state.ledger = changes.creditLedger.newValue || {};
       if (changes.usage) scheduleNext();
       render();
+      queueMount(); // signing out hides the bar
     });
 
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
