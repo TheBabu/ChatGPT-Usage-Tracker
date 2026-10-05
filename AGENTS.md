@@ -20,17 +20,16 @@ Chrome 111. The only site it talks to is chatgpt.com.
 | `content/tracker.js`, `tracker.css` | Runs on chatgpt.com: polls usage, notices replies, draws the bar in the message box and the sidebar section. Everything that depends on ChatGPT's markup is in `SELECTORS` at the top. |
 | `shared/usage.js` | Fetching and normalizing usage, and formatting. Used by the worker, the content script and the popup. |
 | `shared/ui.js`, `ui.css` | Progress bars, rows and the tooltip shared by the sidebar and the popup. |
-| `shared/changelog.js` | Release notes, written for users, shown on the Release notes page. |
 | `popup/` | The toolbar popup: usage, options (the bar in the message box can be turned off), and a Debug section with the log and the last raw response. |
-| `release-notes/` | The Release notes page. |
+| `release-notes/` | The Release notes page. The notes themselves, written for users, are in `changelog.json`, which GitHub releases use too; `versions.js` compares versions for the page, the worker and the release script. |
 | `scripts/build.mjs` | Packs `dist/*.zip`. Fails if a script doesn't parse or the manifest names a missing file; warns when the version has no release notes. |
-| `scripts/release-notes.mjs` | Writes the GitHub release notes from `shared/changelog.js`. |
+| `scripts/release-notes.mjs` | Writes the GitHub release notes from `release-notes/changelog.json`. |
 | `tests/unit/` | Node's built-in test runner, no dependencies. |
 | `tests/e2e/` | The extension in a real Chromium, driven by Playwright. |
-| `.github/workflows/release.yml` | Unit tests and build on every PR; a release when `main` gets a new version, with its notes from `shared/changelog.js`. |
+| `.github/workflows/release.yml` | Unit tests and build on every PR; a release when `main` gets a new version, with its notes from `release-notes/changelog.json`. |
 
 The scripts share code through one global, `globalThis.CGUT`, so load order matters: `usage.js`
-first, then `ui.js` or `changelog.js` add to it. The shipped code uses no ES modules, because
+first, then `ui.js` or `release-notes/versions.js` add to it. The shipped code uses no ES modules, because
 content scripts can't.
 
 ## Commands
@@ -47,8 +46,7 @@ Node 22 or newer.
 Before you call a change done:
 
 1. `npm test` and `npm run build` pass.
-2. You ran `npm run test:e2e` if you touched `background.js`, `popup/`, `release-notes/` or
-   `shared/changelog.js`.
+2. You ran `npm run test:e2e` if you touched `background.js`, `popup/` or `release-notes/`.
 3. For anything you couldn't check (most things on chatgpt.com need a signed-in account), say
    what wasn't tested.
 
@@ -108,8 +106,9 @@ ChatGPT's markup changes often, and none of it is a public API.
 - **Version bumps:** pushing a new `version` in `manifest.json` to `main` publishes a GitHub
   release automatically. Don't change the version unless the maintainer asks.
 - **Release notes:** for a change users would notice, add to the entry for the next version at
-  the top of `shared/changelog.js`, written for users. An update with notes opens the Release notes
-  page; one without updates quietly. See `RELEASING.md`.
+  the top of `release-notes/changelog.json`, written for users. The Release notes page and the
+  GitHub release both show it. An update with notes opens the Release notes page; one without
+  updates quietly. See `RELEASING.md`.
 
 ## Privacy
 

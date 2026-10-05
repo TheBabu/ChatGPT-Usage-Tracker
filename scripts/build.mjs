@@ -34,10 +34,18 @@ for (const file of referenced) {
   if (!existsSync(join(ROOT, file))) fail(`manifest refers to missing file ${file}`);
 }
 
+// The release notes are only read once the extension runs, so a mistake in the JSON (a trailing
+// comma, say) would first show after an update, as a Release notes page that never opens.
+let changelog;
+try {
+  changelog = JSON.parse(readFileSync(join(ROOT, 'release-notes/changelog.json'), 'utf8'));
+} catch (e) {
+  fail(`release-notes/changelog.json doesn't parse: ${e.message}`);
+}
+
 // A version without release notes updates quietly; that's allowed, but easy to do by accident.
-const changelog = readFileSync(join(ROOT, 'shared/changelog.js'), 'utf8');
-if (!changelog.includes(`version: '${manifest.version}'`)) {
-  console.warn(`build: no entry for ${manifest.version} in shared/changelog.js, so this update won't open the Release notes`);
+if (!changelog.some((entry) => entry.version === manifest.version)) {
+  console.warn(`build: no entry for ${manifest.version} in release-notes/changelog.json, so this update won't open the Release notes`);
 }
 
 function listFiles(path) {

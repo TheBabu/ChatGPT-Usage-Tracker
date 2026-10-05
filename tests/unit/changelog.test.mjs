@@ -1,12 +1,15 @@
-// shared/changelog.js: the release notes behind the Release notes page, and when an update shows them.
+// release-notes/changelog.json and versions.js: the release notes behind the Release notes page, and
+// when an update shows them.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import '../../shared/changelog.js';
+import '../../release-notes/versions.js';
 
 const CGUT = globalThis.CGUT;
-const manifest = JSON.parse(readFileSync(new URL('../../manifest.json', import.meta.url), 'utf8'));
-const everything = CGUT.releasedChangelog('999999');
+const read = (path) => JSON.parse(readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8'));
+const manifest = read('manifest.json');
+const changelog = read('release-notes/changelog.json');
+const everything = CGUT.releasedChangelog(changelog, '999999');
 
 test('versions compare number by number', () => {
   assert.equal(CGUT.compareVersions('0.10.0', '0.9.1'), 1);
@@ -29,14 +32,13 @@ test('every entry is well formed', () => {
 });
 
 test('entries are written newest first', () => {
-  const source = readFileSync(new URL('../../shared/changelog.js', import.meta.url), 'utf8');
-  const order = [...source.matchAll(/version: '([^']+)'/g)].map((m) => m[1]);
+  const order = changelog.map((entry) => entry.version);
   const sorted = [...order].sort((a, b) => CGUT.compareVersions(b, a));
   assert.deepEqual(order, sorted);
 });
 
 test('versions newer than the installed one stay hidden', () => {
-  const shown = CGUT.releasedChangelog(manifest.version);
+  const shown = CGUT.releasedChangelog(changelog, manifest.version);
   assert.ok(shown.every((entry) => CGUT.compareVersions(entry.version, manifest.version) <= 0));
   assert.deepEqual(shown.map((e) => e.version), [...shown.map((e) => e.version)].sort((a, b) => CGUT.compareVersions(b, a)));
 });
@@ -45,8 +47,8 @@ test('an update brings in the entries after the old version, up to the new one',
   const [newest, ...older] = everything;
   assert.ok(older.length, 'needs at least two entries');
   const oldest = older[older.length - 1].version;
-  const since = CGUT.changelogSince(oldest, newest.version).map((e) => e.version);
+  const since = CGUT.changelogSince(changelog, oldest, newest.version).map((e) => e.version);
   assert.equal(since[0], newest.version);
   assert.ok(!since.includes(oldest));
-  assert.deepEqual(CGUT.changelogSince(newest.version, newest.version), []);
+  assert.deepEqual(CGUT.changelogSince(changelog, newest.version, newest.version), []);
 });

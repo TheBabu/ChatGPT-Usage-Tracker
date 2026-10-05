@@ -108,11 +108,11 @@ test('older versions fold away so the footer stays close', async (t) => {
   // A copy at 9.9.0 with made-up releases 9.3.0 to 9.9.0 ahead of the real ones, far enough ahead
   // that a real release can't share a version with them.
   const dir = copyExtension('9.9.0');
-  const file = join(dir, 'shared', 'changelog.js');
-  const fake = [9, 8, 7, 6, 5, 4, 3].map((minor) => `{ version: '9.${minor}.0', date: '2026-11-0${minor}', changes: ['Change in 9.${minor}.0.'] },`).join('\n');
-  const real = readFileSync(file, 'utf8');
-  const realCount = real.match(/version: '/g).length; // all older than 9.3.0, so all shown at 9.9.0
-  writeFileSync(file, real.replace('const CHANGELOG = [', `const CHANGELOG = [\n${fake}`));
+  const file = join(dir, 'release-notes', 'changelog.json');
+  const fake = [9, 8, 7, 6, 5, 4, 3].map((minor) => ({ version: `9.${minor}.0`, date: `2026-11-0${minor}`, changes: [`Change in 9.${minor}.0.`] }));
+  const real = JSON.parse(readFileSync(file, 'utf8'));
+  const realCount = real.length; // all older than 9.3.0, so all shown at 9.9.0
+  writeFileSync(file, JSON.stringify([...fake, ...real]));
   const older = (n) => `Show ${n} older versions`;
   const id = await chrome.loadUnpacked(dir);
   await sleep(1500);

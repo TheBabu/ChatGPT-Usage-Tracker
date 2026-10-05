@@ -4,7 +4,7 @@
 // it also opens the Release notes page.
 'use strict';
 
-importScripts('shared/usage.js', 'shared/changelog.js');
+importScripts('shared/usage.js', 'release-notes/versions.js');
 
 const LOG_LIMIT = 150;
 const LEDGER_MONTHS_KEPT = 12;
@@ -130,7 +130,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 async function showReleaseNotes(previousVersion) {
   const version = chrome.runtime.getManifest().version;
   if (!previousVersion || CGUT.compareVersions(version, previousVersion) <= 0) return;
-  if (!CGUT.changelogSince(previousVersion, version).length) return;
+  const changelog = await (await fetch(chrome.runtime.getURL('release-notes/changelog.json'))).json();
+  if (!CGUT.changelogSince(changelog, previousVersion, version).length) return;
   const { releaseNotesOnUpdate } = await chrome.storage.local.get('releaseNotesOnUpdate');
   if (releaseNotesOnUpdate === false) return;
   await openReleaseNotes(previousVersion);

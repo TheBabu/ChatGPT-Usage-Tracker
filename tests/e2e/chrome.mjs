@@ -69,11 +69,12 @@ export async function launchChrome() {
     return result.result.value;
   }
 
-  // Waits until an extension page has loaded and can use the chrome.* APIs.
+  // Waits until an extension page has loaded, can use the chrome.* APIs and isn't still filling
+  // itself in (the Release notes page is aria-busy until its notes are in).
   async function ready(targetId) {
     for (let i = 0; i < 50; i++) {
       try {
-        if (await evaluate(targetId, `document.readyState === 'complete' && !!globalThis.chrome?.runtime?.id`)) return targetId;
+        if (await evaluate(targetId, `document.readyState === 'complete' && !!globalThis.chrome?.runtime?.id && !document.querySelector('[aria-busy="true"]')`)) return targetId;
       } catch {
         // Not attached or not loaded yet.
       }

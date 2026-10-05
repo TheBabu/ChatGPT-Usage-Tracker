@@ -1,6 +1,6 @@
 // The Release notes page: the latest release's notes up top, earlier releases below. The background
 // worker opens it after an update (with ?from=<previous version>), and the toolbar popup links to it.
-// Depends on shared/changelog.js.
+// The notes come from changelog.json; depends on versions.js.
 'use strict';
 
 (() => {
@@ -39,7 +39,8 @@
     return root;
   }
 
-  function render() {
+  // The page is aria-busy until the notes are in, so tests (and screen readers) know when it's done.
+  async function render() {
     document.title = `Release notes · ${manifest.name}`;
     $('product').textContent = manifest.name;
 
@@ -48,7 +49,8 @@
       $('updated-from').textContent = `Updated from version ${from} to ${manifest.version}.`;
     }
 
-    const [latest, ...earlier] = CGUT.releasedChangelog(manifest.version);
+    const changelog = await (await fetch('changelog.json')).json();
+    const [latest, ...earlier] = CGUT.releasedChangelog(changelog, manifest.version);
     if (!latest) {
       $('latest').append(el('p', 'entry-empty', 'No release notes yet.'));
       return;
@@ -77,5 +79,5 @@
   });
   toggle.addEventListener('change', () => chrome.storage.local.set({ releaseNotesOnUpdate: toggle.checked }));
 
-  render();
+  render().finally(() => $('page').removeAttribute('aria-busy'));
 })();
