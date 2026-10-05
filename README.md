@@ -5,7 +5,7 @@ See your ChatGPT usage limits without leaving the chat. Inspired by [lugia19's C
 <img width="2875" height="1161" alt="image" src="https://github.com/user-attachments/assets/d5937ab5-7421-4f5c-bc6d-6768487e38f8" />
 
 - A usage bar in the message box while you're in Work mode: your 5-hour usage, an arrow marking
-  your weekly usage, and when the 5-hour limit resets. You can turn it off in the toolbar popup
+  your weekly usage, and when the 5-hour limit resets (you can turn it off in the toolbar popup)
 - A Usage section in the sidebar, which you can collapse
 - Your credit balance, and how many credits a message used when it was paid for with credits
 - Updates on its own as you chat
