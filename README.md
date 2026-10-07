@@ -6,9 +6,9 @@ See your ChatGPT usage limits without leaving the chat. Inspired by [lugia19's C
 <img width="1000" alt="The same view showing how much is left: 5-hour 93% left, weekly 26% left" src="docs/screenshot-left.webp" />
 
 - A usage bar in the message box while you're in Work mode: your 5-hour usage, an arrow marking
-  your weekly usage, and when the 5-hour limit resets (you can turn it off under Options in the
+  your weekly usage, and when the 5-hour limit resets (you can turn it off under "Options" in the
   toolbar popup)
-- Show usage as used or left: switch between "7% used" and "93% left" under Options in the
+- Show usage as used or left: switch between them under "Options" in the
   toolbar popup
 - A Usage section in the sidebar, which you can collapse
 - Your credit balance, and how many credits a message used when it was paid for with credits
